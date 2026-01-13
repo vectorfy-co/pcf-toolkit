@@ -2,29 +2,29 @@
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
 
 import pytest
+import typer
 from pydantic import ValidationError
 
-from pcf_manifest_toolkit.cli import (
+from pcf_toolkit.cli import (
     _autocomplete_xml_path,
     _render_validation_error,
     _validate_xml_path,
 )
-from pcf_manifest_toolkit.models import Manifest
+from pcf_toolkit.models import Manifest
 
 
 def test_validate_xml_path_requires_xml(tmp_path: Path) -> None:
     non_xml = tmp_path / "file.txt"
     non_xml.write_text("test", encoding="utf-8")
-    with pytest.raises(Exception):
+    with pytest.raises(typer.BadParameter):
         _validate_xml_path(str(non_xml))
 
 
 def test_validate_xml_path_directory(tmp_path: Path) -> None:
-    with pytest.raises(Exception):
+    with pytest.raises(typer.BadParameter):
         _validate_xml_path(str(tmp_path))
 
 
@@ -42,9 +42,7 @@ def test_render_validation_error_fallback(monkeypatch: pytest.MonkeyPatch) -> No
     def _fake_table(*_args, **_kwargs):
         return False
 
-    monkeypatch.setattr(
-        "pcf_manifest_toolkit.cli.render_validation_table", _fake_table
-    )
+    monkeypatch.setattr("pcf_toolkit.cli.render_validation_table", _fake_table)
     with pytest.raises(ValidationError) as exc_info:
         Manifest.model_validate({"control": {"namespace": "Bad", "constructor": "Nope"}})
     _render_validation_error(exc_info.value)

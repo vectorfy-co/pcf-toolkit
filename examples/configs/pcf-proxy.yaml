@@ -1,0 +1,41 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/vectorfy-co/pcf-toolkit/refs/heads/main/schemas/pcf-proxy.schema.json
+# Example proxy configuration for pcf-toolkit
+
+crm_url: "https://yourorg.crm.dynamics.com/"
+
+# Match the PCF webresource URL base; {PCF_NAME} is replaced at runtime.
+expected_path: "/webresources/{PCF_NAME}/"
+
+proxy:
+  host: "127.0.0.1" # mitmproxy listens here
+  port: 8080
+
+http_server:
+  host: "127.0.0.1" # local file server for your built bundle
+  port: 8082
+
+# Relative to the component folder.
+# Example: out/controls/MyComponent
+bundle:
+  dist_path: "out/controls/{PCF_NAME}"
+
+browser:
+  prefer: "chrome"   # chrome | edge | auto
+  path: null          # explicit path to browser executable (optional)
+  # Common defaults (if path is null):
+  # - macOS Chrome: /Applications/Google Chrome.app/Contents/MacOS/Google Chrome
+  # - macOS Edge:   /Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge
+  # - Windows Chrome: C:\Program Files\Google\Chrome\Application\chrome.exe
+  # - Windows Edge:   C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe
+  # - Linux: uses PATH lookups (google-chrome, chromium, microsoft-edge)
+
+mitmproxy:
+  path: null          # explicit path to mitmproxy/mitmdump (optional)
+  # Common defaults (if path is null):
+  # - macOS/Linux (if installed): mitmdump or mitmproxy on PATH
+  # - Windows (if installed): mitmdump.exe or mitmproxy.exe on PATH
+  # - Auto-install (if missing): ~/.pcf-toolkit/venvs/mitmproxy/...
+
+open_browser: true
+# Auto-install mitmproxy if it is not found
+auto_install: true

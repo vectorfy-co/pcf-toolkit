@@ -5,8 +5,8 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from pcf_manifest_toolkit.models import Code, Control, ExternalServiceUsage, Manifest, Resources
-from pcf_manifest_toolkit.types import ControlType
+from pcf_toolkit.models import Code, Control, ExternalServiceUsage, Manifest, Resources
+from pcf_toolkit.types import ControlType
 
 
 def _minimal_control(namespace: str, constructor: str) -> Control:

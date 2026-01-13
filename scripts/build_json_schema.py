@@ -4,10 +4,10 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from pcf_manifest_toolkit.json_schema import manifest_schema_text
+from pcf_toolkit.json_schema import manifest_schema_text
 
 OUTPUT_PATH = Path("schemas/pcf-manifest.schema.json")
-PACKAGE_OUTPUT_PATH = Path("src/pcf_manifest_toolkit/data/manifest.schema.json")
+PACKAGE_OUTPUT_PATH = Path("src/pcf_toolkit/data/manifest.schema.json")
 
 
 def main() -> None:

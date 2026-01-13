@@ -43,7 +43,7 @@ jobs:
         run: git diff --exit-code
 
       - name: Run Pytest
-        run: uv run --python 3.13 pytest -q --cov=pcf_manifest_toolkit --cov-report=term-missing
+        run: uv run --python 3.13 pytest -q --cov=pcf_toolkit --cov-report=term-missing
 
   publish:
     needs: test

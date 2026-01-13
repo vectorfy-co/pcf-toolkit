@@ -1,34 +1,34 @@
-"""CLI entrypoints for the PCF manifest toolkit."""
+"""CLI entrypoints for the PCF toolkit."""
 
 from __future__ import annotations
 
-from importlib import metadata
-from pathlib import Path
 import json
 import sys
 import textwrap
-from typing import Optional
+from importlib import metadata
+from pathlib import Path
 
 import typer
-from pydantic import ValidationError
 import yaml
+from pydantic import ValidationError
 
-from pcf_manifest_toolkit.cli_helpers import render_validation_table, rich_console
-from pcf_manifest_toolkit.io import load_manifest
-from pcf_manifest_toolkit.json_schema import manifest_schema_text
-from pcf_manifest_toolkit.rich_help import RichTyperCommand, RichTyperGroup
-from pcf_manifest_toolkit.schema_snapshot import load_schema_snapshot
-from pcf_manifest_toolkit.xml import ManifestXmlSerializer
-from pcf_manifest_toolkit.xml_import import parse_manifest_xml_path
-
+from pcf_toolkit.cli_helpers import render_validation_table, rich_console
+from pcf_toolkit.io import load_manifest
+from pcf_toolkit.json_schema import manifest_schema_text
+from pcf_toolkit.proxy.cli import app as proxy_app
+from pcf_toolkit.rich_help import RichTyperCommand, RichTyperGroup
+from pcf_toolkit.schema_snapshot import load_schema_snapshot
+from pcf_toolkit.xml import ManifestXmlSerializer
+from pcf_toolkit.xml_import import parse_manifest_xml_path
 
 APP_HELP = textwrap.dedent(
     """
-    [bold]PCF manifest toolkit[/bold]
+    [bold]PCF toolkit[/bold]
 
     Author [i]ControlManifest.Input.xml[/i] as code.
     Validate with strong typing.
     Generate deterministic XML.
+    Proxy PCF webresources for local dev.
     """
 ).strip()
 
@@ -36,32 +36,50 @@ APP_EPILOG = textwrap.dedent(
     """
     [bold cyan]Examples[/bold cyan]
 
-      - pcf-manifest validate manifest.yaml
+      - pcf-toolkit validate manifest.yaml
 
-      - pcf-manifest generate manifest.yaml -o ControlManifest.Input.xml
+      - pcf-toolkit generate manifest.yaml -o ControlManifest.Input.xml
 
-      - pcf-manifest export-json-schema -o schemas/pcf-manifest.schema.json
+      - pcf-toolkit proxy start MyComponent
+
+      - pcf-toolkit export-json-schema -o schemas/pcf-manifest.schema.json
 
     [bold cyan]Tips[/bold cyan]
 
-      - Install shell completion: pcf-manifest --install-completion
+      - Install shell completion: pcf-toolkit --install-completion
 
       - Use YAML schema validation:
 
-        # yaml-language-server: $schema=./schemas/pcf-manifest.schema.json
+        # yaml-language-server: $schema=https://raw.githubusercontent.com/vectorfy-co/pcf-toolkit/refs/heads/main/schemas/pcf-manifest.schema.json
     """
 ).strip()
 
 
 def _version_callback(value: bool) -> None:
+    """Callback for --version option that prints version and exits.
+
+    Args:
+      value: Whether the version flag was set.
+    """
     if not value:
         return
-    version = metadata.version("pcf-manifest")
-    typer.echo(f"pcf-manifest {version}")
+    version = metadata.version("pcf-toolkit")
+    typer.echo(f"pcf-toolkit {version}")
     raise typer.Exit()
 
 
 def _validate_manifest_path(value: str) -> str:
+    """Validates that a manifest path exists and is a file.
+
+    Args:
+      value: Path to validate, or "-" for stdin.
+
+    Returns:
+      The validated path string.
+
+    Raises:
+      typer.BadParameter: If the path doesn't exist or is a directory.
+    """
     if value == "-":
         return value
     path = Path(value)
@@ -73,6 +91,18 @@ def _validate_manifest_path(value: str) -> str:
 
 
 def _validate_xml_path(value: str) -> str:
+    """Validates that an XML path exists, is a file, and has .xml extension.
+
+    Args:
+      value: Path to validate, or "-" for stdin.
+
+    Returns:
+      The validated path string.
+
+    Raises:
+      typer.BadParameter: If the path doesn't exist, is a directory, or lacks
+        .xml extension.
+    """
     if value == "-":
         return value
     path = Path(value)
@@ -85,9 +115,17 @@ def _validate_xml_path(value: str) -> str:
     return value
 
 
-def _autocomplete_xml_path(
-    ctx: typer.Context, args: list[str], incomplete: str
-) -> list[str]:
+def _autocomplete_xml_path(ctx: typer.Context, args: list[str], incomplete: str) -> list[str]:
+    """Provides autocomplete suggestions for XML file paths.
+
+    Args:
+      ctx: Typer context (unused).
+      args: Command arguments (unused).
+      incomplete: The incomplete path string to complete.
+
+    Returns:
+      List of completion candidates (XML files or directories).
+    """
     if incomplete == "-":
         return ["-"]
     if incomplete.startswith("-"):
@@ -119,6 +157,11 @@ def _autocomplete_xml_path(
 
 
 def _render_validation_error(exc: ValidationError) -> None:
+    """Renders Pydantic validation errors in a user-friendly format.
+
+    Args:
+      exc: The ValidationError exception to render.
+    """
     typer.secho("Manifest is invalid.", fg=typer.colors.RED, bold=True, err=True)
     errors = exc.errors()
     if render_validation_table(errors, title="Validation Errors", stderr=True):
@@ -128,20 +171,30 @@ def _render_validation_error(exc: ValidationError) -> None:
         msg = error.get("msg", "Invalid value")
         error_type = error.get("type", "validation_error")
         typer.echo(f"  - {loc}: {msg} ({error_type})", err=True)
+    typer.echo(
+        "Tip: run 'pcf-toolkit export-json-schema' and use the schema in your editor.",
+        err=True,
+    )
 
 
 app = typer.Typer(
-    name="pcf-manifest",
+    name="pcf-toolkit",
     cls=RichTyperGroup,
     help=APP_HELP,
     epilog=APP_EPILOG,
-    short_help="PCF manifest authoring and XML generation toolkit.",
+    short_help="PCF toolkit for manifests and local proxy workflows.",
     no_args_is_help=True,
     rich_markup_mode="rich",
     pretty_exceptions_enable=True,
     pretty_exceptions_show_locals=False,
     suggest_commands=True,
     context_settings={"help_option_names": ["-h", "--help"]},
+)
+
+app.add_typer(
+    proxy_app,
+    name="proxy",
+    help="Local dev proxy for PCF components.",
 )
 
 
@@ -156,7 +209,7 @@ def main(
         rich_help_panel="Global options",
     ),
 ) -> None:
-    """PCF manifest toolkit."""
+    """Main CLI entrypoint for the PCF toolkit."""
 
 
 VALIDATE_HELP = textwrap.dedent(
@@ -169,9 +222,9 @@ VALIDATE_HELP = textwrap.dedent(
 
 VALIDATE_EPILOG = textwrap.dedent(
     """
-      - pcf-manifest validate manifest.yaml
+      - pcf-toolkit validate manifest.yaml
 
-      - cat manifest.yaml | pcf-manifest validate -
+      - cat manifest.yaml | pcf-toolkit validate -
     """
 ).strip()
 
@@ -190,9 +243,16 @@ def validate_manifest(
         help="Path to a YAML/JSON manifest definition, or '-' for stdin.",
         allow_dash=True,
         callback=_validate_manifest_path,
-    )
+    ),
 ) -> None:
-    """Validate a manifest definition."""
+    """Validates a manifest definition against the PCF schema.
+
+    Args:
+      path: Path to a YAML/JSON manifest file, or '-' to read from stdin.
+
+    Raises:
+      typer.Exit: Exit code 1 if validation fails.
+    """
     try:
         load_manifest(path)
     except ValidationError as exc:
@@ -211,9 +271,9 @@ GENERATE_HELP = textwrap.dedent(
 
 GENERATE_EPILOG = textwrap.dedent(
     """
-      - pcf-manifest generate manifest.yaml -o ControlManifest.Input.xml
+      - pcf-toolkit generate manifest.yaml -o ControlManifest.Input.xml
 
-      - cat manifest.yaml | pcf-manifest generate -
+      - cat manifest.yaml | pcf-toolkit generate -
     """
 ).strip()
 
@@ -233,7 +293,7 @@ def generate_manifest(
         allow_dash=True,
         callback=_validate_manifest_path,
     ),
-    output: Optional[Path] = typer.Option(
+    output: Path | None = typer.Option(
         None,
         "--output",
         "-o",
@@ -250,7 +310,14 @@ def generate_manifest(
         rich_help_panel="Output",
     ),
 ) -> None:
-    """Generate ControlManifest.Input.xml."""
+    """Generates ControlManifest.Input.xml from a manifest definition.
+
+    Args:
+      path: Path to a YAML/JSON manifest file, or '-' to read from stdin.
+      output: Optional file path to write XML to. If not provided, writes to
+        stdout.
+      no_declaration: If True, omits the XML declaration header.
+    """
     manifest = load_manifest(path)
     serializer = ManifestXmlSerializer(xml_declaration=not no_declaration)
     xml_text = serializer.to_string(manifest)
@@ -271,9 +338,9 @@ IMPORT_XML_HELP = textwrap.dedent(
 
 IMPORT_XML_EPILOG = textwrap.dedent(
     """
-      - pcf-manifest import-xml ControlManifest.Input.xml -o manifest.yaml
+      - pcf-toolkit import-xml ControlManifest.Input.xml -o manifest.yaml
 
-      - pcf-manifest import-xml ControlManifest.Input.xml --format json
+      - pcf-toolkit import-xml ControlManifest.Input.xml --format json
     """
 ).strip()
 
@@ -294,7 +361,7 @@ def import_xml(
         callback=_validate_xml_path,
         autocompletion=_autocomplete_xml_path,
     ),
-    output: Optional[Path] = typer.Option(
+    output: Path | None = typer.Option(
         None,
         "--output",
         "-o",
@@ -313,13 +380,13 @@ def import_xml(
     schema_directive: bool = typer.Option(
         True,
         "--schema-directive/--no-schema-directive",
-        help="Include YAML schema header when outputting YAML.",
+        help="Include schema header when outputting YAML/JSON.",
         rich_help_panel="Output",
     ),
     schema_path: str = typer.Option(
-        "./schemas/pcf-manifest.schema.json",
+        "https://raw.githubusercontent.com/vectorfy-co/pcf-toolkit/refs/heads/main/schemas/pcf-manifest.schema.json",
         "--schema-path",
-        help="Schema path used in the YAML directive.",
+        help="Schema path used in the YAML/JSON output.",
         rich_help_panel="Output",
     ),
     validate: bool = typer.Option(
@@ -329,11 +396,29 @@ def import_xml(
         rich_help_panel="Validation",
     ),
 ) -> None:
-    """Convert ControlManifest.Input.xml to YAML or JSON."""
+    """Converts ControlManifest.Input.xml into YAML or JSON format.
+
+    Args:
+      path: Path to ControlManifest.Input.xml file, or '-' to read from stdin.
+      output: Optional file path to write output to. If not provided, writes to
+        stdout.
+      output_format: Output format, either 'yaml' or 'json'.
+      schema_directive: If True, includes schema directive in output.
+      schema_path: URL or path to schema file for the directive.
+      validate: If True, validates the imported manifest against the schema.
+
+    Raises:
+      typer.BadParameter: If output_format is not 'yaml' or 'json'.
+      typer.Exit: Exit code 1 if import or validation fails.
+    """
     try:
         raw = parse_manifest_xml_path(path)
     except ValueError as exc:
         typer.secho(f"Import failed: {exc}", fg=typer.colors.RED, bold=True, err=True)
+        typer.echo(
+            "Tip: pass a valid ControlManifest.Input.xml file, or use '-' for stdin.",
+            err=True,
+        )
         raise typer.Exit(code=1) from exc
     except Exception as exc:  # pragma: no cover - defensive: unexpected parser issues
         typer.secho(
@@ -342,10 +427,11 @@ def import_xml(
             bold=True,
             err=True,
         )
+        typer.echo("Tip: try --format json to inspect the parsed structure.", err=True)
         raise typer.Exit(code=1) from exc
 
     if validate:
-        from pcf_manifest_toolkit.models import Manifest
+        from pcf_toolkit.models import Manifest
 
         try:
             manifest = Manifest.model_validate(raw)
@@ -366,6 +452,8 @@ def import_xml(
         raise typer.BadParameter("format must be 'yaml' or 'json'")
 
     if output_format == "json":
+        if schema_directive and "$schema" not in data:
+            data = {"$schema": schema_path, **data}
         text = json.dumps(data, indent=2, ensure_ascii=True)
     else:
         try:
@@ -388,9 +476,7 @@ def import_xml(
             )
             raise typer.Exit(code=1) from exc
         if schema_directive:
-            yaml_text = (
-                f"# yaml-language-server: $schema={schema_path}\n{yaml_text}"
-            )
+            yaml_text = f"# yaml-language-server: $schema={schema_path}\n{yaml_text}"
         text = yaml_text
 
     if output:
@@ -408,7 +494,7 @@ EXPORT_SCHEMA_HELP = textwrap.dedent(
 
 EXPORT_SCHEMA_EPILOG = textwrap.dedent(
     """
-      - pcf-manifest export-schema -o data/schema_snapshot.json
+      - pcf-toolkit export-schema -o data/schema_snapshot.json
     """
 ).strip()
 
@@ -421,7 +507,7 @@ EXPORT_SCHEMA_EPILOG = textwrap.dedent(
     rich_help_panel="Schema tools",
 )
 def export_schema(
-    output: Optional[Path] = typer.Option(
+    output: Path | None = typer.Option(
         None,
         "--output",
         "-o",
@@ -431,7 +517,12 @@ def export_schema(
         writable=True,
     ),
 ) -> None:
-    """Export the machine-readable schema snapshot."""
+    """Exports the machine-readable schema snapshot JSON.
+
+    Args:
+      output: Optional file path to write schema to. If not provided, writes to
+        stdout.
+    """
     snapshot = load_schema_snapshot()
     if output:
         output.write_text(snapshot, encoding="utf-8")
@@ -448,7 +539,7 @@ EXPORT_JSON_SCHEMA_HELP = textwrap.dedent(
 
 EXPORT_JSON_SCHEMA_EPILOG = textwrap.dedent(
     """
-      - pcf-manifest export-json-schema -o schemas/pcf-manifest.schema.json
+      - pcf-toolkit export-json-schema -o schemas/pcf-manifest.schema.json
     """
 ).strip()
 
@@ -461,7 +552,7 @@ EXPORT_JSON_SCHEMA_EPILOG = textwrap.dedent(
     rich_help_panel="Schema tools",
 )
 def export_json_schema(
-    output: Optional[Path] = typer.Option(
+    output: Path | None = typer.Option(
         None,
         "--output",
         "-o",
@@ -471,7 +562,12 @@ def export_json_schema(
         writable=True,
     ),
 ) -> None:
-    """Export JSON Schema for manifest definitions."""
+    """Exports JSON Schema for manifest definitions.
+
+    Args:
+      output: Optional file path to write schema to. If not provided, writes to
+        stdout.
+    """
     schema_text = manifest_schema_text()
     if output:
         output.write_text(schema_text, encoding="utf-8")
@@ -494,12 +590,13 @@ EXAMPLES_HELP = textwrap.dedent(
     rich_help_panel="Developer tools",
 )
 def show_examples() -> None:
-    """Print curated examples for quick start."""
+    """Prints curated examples for quick start.
+
+    Displays markdown-formatted examples showing common usage patterns.
+    """
     console = rich_console(stderr=False)
     if console is None:
-        typer.echo(
-            "Examples are best viewed with Rich enabled. Install extra dependencies."
-        )
+        typer.echo("Examples are best viewed with Rich enabled. Install extra dependencies.")
         return
 
     from rich.markdown import Markdown
@@ -510,25 +607,25 @@ def show_examples() -> None:
         ## Validate a manifest
 
         ```bash
-        pcf-manifest validate manifest.yaml
+        pcf-toolkit validate manifest.yaml
         ```
 
         ## Generate XML
 
         ```bash
-        pcf-manifest generate manifest.yaml -o ControlManifest.Input.xml
+        pcf-toolkit generate manifest.yaml -o ControlManifest.Input.xml
         ```
 
         ## Import XML to YAML
 
         ```bash
-        pcf-manifest import-xml ControlManifest.Input.xml -o manifest.yaml
+        pcf-toolkit import-xml ControlManifest.Input.xml -o manifest.yaml
         ```
 
         ## Add YAML schema validation
 
         ```yaml
-        # yaml-language-server: $schema=./schemas/pcf-manifest.schema.json
+        # yaml-language-server: $schema=https://raw.githubusercontent.com/vectorfy-co/pcf-toolkit/refs/heads/main/schemas/pcf-manifest.schema.json
         ```
 
         ## Minimal YAML
@@ -570,7 +667,16 @@ def doctor(
         help="Return non-zero exit code on warnings.",
     ),
 ) -> None:
-    """Inspect environment for common issues."""
+    """Inspects environment for common issues.
+
+    Checks Python version, schema files, and other prerequisites.
+
+    Args:
+      strict: If True, returns non-zero exit code on warnings.
+
+    Raises:
+      typer.Exit: Exit code 1 if issues found (or warnings in strict mode).
+    """
     console = rich_console(stderr=False)
     issues = 0
     warnings = 0
@@ -591,14 +697,14 @@ def doctor(
             table.add_column("Check", style="bold")
             table.add_column("Status")
             table.add_column("Details")
-            setattr(add_check, "_table", table)
-        table = getattr(add_check, "_table")
+            add_check._table = table
+        table = add_check._table
         style = {"OK": "green", "WARN": "yellow", "FAIL": "red"}.get(status, "white")
         table.add_row(name, f"[{style}]{status}[/{style}]", detail)
 
     # Python version
-    if sys.version_info < (3, 12):
-        add_check("Python", "FAIL", "Requires Python 3.12+")
+    if sys.version_info < (3, 13):
+        add_check("Python", "FAIL", "Requires Python 3.13+")
     else:
         add_check("Python", "OK", f"{sys.version_info.major}.{sys.version_info.minor}")
 
@@ -619,14 +725,14 @@ def doctor(
     else:
         add_check("Schema snapshot", "WARN", "data/schema_snapshot.json missing")
 
-    packaged_schema = Path("src/pcf_manifest_toolkit/data/manifest.schema.json")
+    packaged_schema = Path("src/pcf_toolkit/data/manifest.schema.json")
     if packaged_schema.exists():
         add_check("Packaged schema", "OK", str(packaged_schema))
     else:
         add_check("Packaged schema", "WARN", "Package schema missing")
 
     if console is not None and hasattr(add_check, "_table"):
-        console.print(getattr(add_check, "_table"))
+        console.print(add_check._table)
 
     if issues or (strict and warnings):
         raise typer.Exit(code=1)

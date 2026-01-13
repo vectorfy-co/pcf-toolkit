@@ -3,17 +3,16 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
 import xml.etree.ElementTree as ET
+from pathlib import Path
 
-from typer.testing import CliRunner
 import yaml
+from typer.testing import CliRunner
 
-from pcf_manifest_toolkit.cli import app
-from pcf_manifest_toolkit.models import Manifest
-from pcf_manifest_toolkit.xml import ManifestXmlSerializer
-from pcf_manifest_toolkit.xml_import import parse_manifest_xml_text
-
+from pcf_toolkit.cli import app
+from pcf_toolkit.models import Manifest
+from pcf_toolkit.xml import ManifestXmlSerializer
+from pcf_toolkit.xml_import import parse_manifest_xml_text
 
 runner = CliRunner()
 
@@ -95,10 +94,10 @@ def test_cli_validate_json_file(tmp_path: Path) -> None:
 def test_cli_import_xml_to_yaml_and_json(tmp_path: Path) -> None:
     xml_text = (
         "<manifest>"
-        "<control namespace=\"Sample\" constructor=\"SampleControl\" "
-        "version=\"1.0.0\" display-name-key=\"Sample_Display\" "
-        "control-type=\"virtual\">"
-        "<resources><code path=\"index.ts\" order=\"1\" /></resources>"
+        '<control namespace="Sample" constructor="SampleControl" '
+        'version="1.0.0" display-name-key="Sample_Display" '
+        'control-type="virtual">'
+        '<resources><code path="index.ts" order="1" /></resources>'
         "</control>"
         "</manifest>"
     )
@@ -114,11 +113,10 @@ def test_cli_import_xml_to_yaml_and_json(tmp_path: Path) -> None:
     assert data["control"]["control-type"] == "virtual"
 
     json_path = tmp_path / "manifest.json"
-    result = runner.invoke(
-        app, ["import-xml", str(xml_path), "--format", "json", "-o", str(json_path)]
-    )
+    result = runner.invoke(app, ["import-xml", str(xml_path), "--format", "json", "-o", str(json_path)])
     assert result.exit_code == 0
     data = json.loads(json_path.read_text(encoding="utf-8"))
+    assert data["$schema"].startswith("https://raw.githubusercontent.com/")
     assert data["control"]["control-type"] == "virtual"
 
     no_schema_path = tmp_path / "manifest-no-schema.yaml"
@@ -133,25 +131,21 @@ def test_cli_import_xml_to_yaml_and_json(tmp_path: Path) -> None:
         ],
     )
     assert result.exit_code == 0
-    assert not no_schema_path.read_text(encoding="utf-8").startswith(
-        "# yaml-language-server:"
-    )
+    assert not no_schema_path.read_text(encoding="utf-8").startswith("# yaml-language-server:")
 
 
 def test_cli_import_xml_from_stdin(tmp_path: Path) -> None:
     xml_text = (
         "<manifest>"
-        "<control namespace=\"Sample\" constructor=\"SampleControl\" "
-        "version=\"1.0.0\" display-name-key=\"Sample_Display\" "
-        "control-type=\"virtual\">"
-        "<resources><code path=\"index.ts\" order=\"1\" /></resources>"
+        '<control namespace="Sample" constructor="SampleControl" '
+        'version="1.0.0" display-name-key="Sample_Display" '
+        'control-type="virtual">'
+        '<resources><code path="index.ts" order="1" /></resources>'
         "</control>"
         "</manifest>"
     )
     out_path = tmp_path / "manifest.yaml"
-    result = runner.invoke(
-        app, ["import-xml", "-", "-o", str(out_path)], input=xml_text
-    )
+    result = runner.invoke(app, ["import-xml", "-", "-o", str(out_path)], input=xml_text)
     assert result.exit_code == 0
     data = yaml.safe_load(out_path.read_text(encoding="utf-8"))
     assert data["control"]["control-type"] == "virtual"
@@ -169,8 +163,8 @@ def test_cli_import_xml_invalid_root(tmp_path: Path) -> None:
 def test_cli_import_xml_validation_error(tmp_path: Path) -> None:
     xml_text = (
         "<manifest>"
-        "<control namespace=\"Sample\" version=\"1.0.0\" display-name-key=\"Sample_Display\">"
-        "<resources><code path=\"index.ts\" order=\"1\" /></resources>"
+        '<control namespace="Sample" version="1.0.0" display-name-key="Sample_Display">'
+        '<resources><code path="index.ts" order="1" /></resources>'
         "</control>"
         "</manifest>"
     )
@@ -184,9 +178,9 @@ def test_cli_import_xml_validation_error(tmp_path: Path) -> None:
 def test_cli_import_xml_no_validate_stdout(tmp_path: Path) -> None:
     xml_text = (
         "<manifest>"
-        "<control namespace=\"Sample\" constructor=\"SampleControl\" "
-        "version=\"1.0.0\" display-name-key=\"Sample_Display\">"
-        "<resources><code path=\"index.ts\" order=\"1\" /></resources>"
+        '<control namespace="Sample" constructor="SampleControl" '
+        'version="1.0.0" display-name-key="Sample_Display">'
+        '<resources><code path="index.ts" order="1" /></resources>'
         "</control>"
         "</manifest>"
     )
@@ -195,6 +189,7 @@ def test_cli_import_xml_no_validate_stdout(tmp_path: Path) -> None:
     result = runner.invoke(app, ["import-xml", str(xml_path), "--no-validate"])
     assert result.exit_code == 0
     assert "control:" in result.output
+
 
 def test_cli_generate_from_stdin() -> None:
     yaml_text = yaml.safe_dump(_minimal_manifest_dict(), sort_keys=False)
@@ -206,9 +201,7 @@ def test_cli_generate_from_stdin() -> None:
 def test_cli_generate_no_declaration(tmp_path: Path) -> None:
     manifest_path = tmp_path / "manifest.yaml"
     _write_yaml(manifest_path, _minimal_manifest_dict())
-    result = runner.invoke(
-        app, ["generate", str(manifest_path), "--no-declaration"]
-    )
+    result = runner.invoke(app, ["generate", str(manifest_path), "--no-declaration"])
     assert result.exit_code == 0
     assert not result.output.lstrip().startswith("<?xml")
 
@@ -259,14 +252,9 @@ def test_manifest_yaml_json_roundtrip(tmp_path: Path) -> None:
     json_path.write_text(json.dumps(data, indent=2), encoding="utf-8")
 
     manifest_from_yaml = Manifest.model_validate(yaml.safe_load(yaml_path.read_text()))
-    manifest_from_json = Manifest.model_validate(
-        json.loads(json_path.read_text(encoding="utf-8"))
-    )
+    manifest_from_json = Manifest.model_validate(json.loads(json_path.read_text(encoding="utf-8")))
 
-    assert (
-        manifest_from_yaml.model_dump(mode="json")
-        == manifest_from_json.model_dump(mode="json")
-    )
+    assert manifest_from_yaml.model_dump(mode="json") == manifest_from_json.model_dump(mode="json")
 
 
 def test_manifest_xml_roundtrip() -> None:
@@ -289,14 +277,14 @@ def test_cli_doctor_command() -> None:
 
 
 def test_cli_examples_without_rich(monkeypatch) -> None:
-    monkeypatch.setattr("pcf_manifest_toolkit.cli.rich_console", lambda stderr=False: None)
+    monkeypatch.setattr("pcf_toolkit.cli.rich_console", lambda stderr=False: None)
     result = runner.invoke(app, ["examples"])
     assert result.exit_code == 0
     assert "Examples are best viewed" in result.output
 
 
 def test_cli_doctor_without_rich(monkeypatch) -> None:
-    monkeypatch.setattr("pcf_manifest_toolkit.cli.rich_console", lambda stderr=False: None)
+    monkeypatch.setattr("pcf_toolkit.cli.rich_console", lambda stderr=False: None)
     result = runner.invoke(app, ["doctor"])
     assert result.exit_code == 0
 
@@ -304,17 +292,15 @@ def test_cli_doctor_without_rich(monkeypatch) -> None:
 def test_cli_import_xml_format_validation(tmp_path: Path) -> None:
     xml_text = (
         "<manifest>"
-        "<control namespace=\"Sample\" constructor=\"SampleControl\" "
-        "version=\"1.0.0\" display-name-key=\"Sample_Display\">"
-        "<resources><code path=\"index.ts\" order=\"1\" /></resources>"
+        '<control namespace="Sample" constructor="SampleControl" '
+        'version="1.0.0" display-name-key="Sample_Display">'
+        '<resources><code path="index.ts" order="1" /></resources>'
         "</control>"
         "</manifest>"
     )
     xml_path = tmp_path / "ControlManifest.Input.xml"
     _write_xml(xml_path, xml_text)
-    result = runner.invoke(
-        app, ["import-xml", str(xml_path), "--format", "toml"]
-    )
+    result = runner.invoke(app, ["import-xml", str(xml_path), "--format", "toml"])
     assert result.exit_code != 0
 
 
@@ -324,7 +310,7 @@ def test_cli_help_and_version() -> None:
     assert "Examples" in help_result.output
     version_result = runner.invoke(app, ["--version"])
     assert version_result.exit_code == 0
-    assert "pcf-manifest" in version_result.output
+    assert "pcf-toolkit" in version_result.output
 
 
 def test_cli_command_help() -> None:

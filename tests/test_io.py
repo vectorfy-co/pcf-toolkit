@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from pcf_manifest_toolkit.io import load_manifest
+from pcf_toolkit.io import load_manifest
 
 
 def _minimal_manifest_dict() -> dict[str, object]:
@@ -30,7 +30,6 @@ def test_load_manifest_from_json_file(tmp_path: Path) -> None:
 
 
 def test_load_manifest_from_yaml_file(tmp_path: Path) -> None:
-    data = _minimal_manifest_dict()
     path = tmp_path / "manifest.yaml"
     path.write_text(
         "\n".join(

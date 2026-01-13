@@ -1,0 +1,10 @@
+repos:
+  - repo: local
+    hooks:
+      - id: bump-version-post-commit
+        name: Bump pyproject.toml version (patch) and amend commit
+        entry: scripts/bump_version_post_commit.sh
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [post-commit]

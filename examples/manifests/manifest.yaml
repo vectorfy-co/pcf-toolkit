@@ -1,0 +1,22 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/vectorfy-co/pcf-toolkit/refs/heads/main/schemas/pcf-manifest.schema.json
+control:
+  namespace: MyNameSpace
+  constructor: JSHelloWorldControl
+  version: 1.0.0
+  display-name-key: JS_HelloWorldControl_Display_Key
+  description-key: JS_HelloWorldControl_Desc_Key
+  control-type: standard
+  property:
+    - name: myFirstProperty
+      display-name-key: myFirstProperty_Display_Key
+      description-key: myFirstProperty_Desc_Key
+      of-type: SingleLine.Text
+      usage: bound
+      required: true
+  resources:
+    code:
+      path: JS_HelloWorldControl.js
+      order: 1
+    css:
+      - path: css/JS_HelloWorldControl.css
+        order: 1

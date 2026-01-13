@@ -3,14 +3,13 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from typing import Any
 
 import click
+import typer.core as core
+import typer.rich_utils as rich_utils
 from rich.align import Align
 from rich.padding import Padding
 from rich.panel import Panel
-import typer.core as core
-import typer.rich_utils as rich_utils
 
 
 def rich_format_help_custom(
@@ -19,7 +18,13 @@ def rich_format_help_custom(
     ctx: click.Context,
     markup_mode: rich_utils.MarkupModeStrict,
 ) -> None:
-    """Print Rich-formatted help with a custom examples panel."""
+    """Prints Rich-formatted help with a custom examples panel.
+
+    Args:
+      obj: Click command or group to format help for.
+      ctx: Click context.
+      markup_mode: Rich markup mode for formatting.
+    """
     console = rich_utils._get_rich_console()
 
     # Usage
@@ -50,16 +55,10 @@ def rich_format_help_custom(
         if getattr(param, "hidden", False):
             continue
         if isinstance(param, click.Argument):
-            panel_name = (
-                getattr(param, rich_utils._RICH_HELP_PANEL_NAME, None)
-                or rich_utils.ARGUMENTS_PANEL_TITLE
-            )
+            panel_name = getattr(param, rich_utils._RICH_HELP_PANEL_NAME, None) or rich_utils.ARGUMENTS_PANEL_TITLE
             panel_to_arguments[panel_name].append(param)
         elif isinstance(param, click.Option):
-            panel_name = (
-                getattr(param, rich_utils._RICH_HELP_PANEL_NAME, None)
-                or rich_utils.OPTIONS_PANEL_TITLE
-            )
+            panel_name = getattr(param, rich_utils._RICH_HELP_PANEL_NAME, None) or rich_utils.OPTIONS_PANEL_TITLE
             panel_to_options[panel_name].append(param)
 
     default_arguments = panel_to_arguments.get(rich_utils.ARGUMENTS_PANEL_TITLE, [])
@@ -105,18 +104,11 @@ def rich_format_help_custom(
         for command_name in obj.list_commands(ctx):
             command = obj.get_command(ctx, command_name)
             if command and not command.hidden:
-                panel_name = (
-                    getattr(command, rich_utils._RICH_HELP_PANEL_NAME, None)
-                    or rich_utils.COMMANDS_PANEL_TITLE
-                )
+                panel_name = getattr(command, rich_utils._RICH_HELP_PANEL_NAME, None) or rich_utils.COMMANDS_PANEL_TITLE
                 panel_to_commands[panel_name].append(command)
 
         max_cmd_len = max(
-            [
-                len(command.name or "")
-                for commands in panel_to_commands.values()
-                for command in commands
-            ],
+            [len(command.name or "") for commands in panel_to_commands.values() for command in commands],
             default=0,
         )
 

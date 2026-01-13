@@ -1,0 +1,25 @@
+{
+  "$schema": "https://raw.githubusercontent.com/vectorfy-co/pcf-toolkit/refs/heads/main/schemas/pcf-proxy.schema.json",
+  "crm_url": "https://yourorg.crm.dynamics.com/",
+  "expected_path": "/webresources/{PCF_NAME}/",
+  "proxy": {
+    "host": "127.0.0.1",
+    "port": 8080
+  },
+  "http_server": {
+    "host": "127.0.0.1",
+    "port": 8082
+  },
+  "bundle": {
+    "dist_path": "out/controls/{PCF_NAME}"
+  },
+  "browser": {
+    "prefer": "chrome",
+    "path": null
+  },
+  "mitmproxy": {
+    "path": null
+  },
+  "open_browser": true,
+  "auto_install": true
+}

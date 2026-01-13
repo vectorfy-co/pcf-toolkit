@@ -3,14 +3,14 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
 RAW_PATH = Path("data/spec_raw.json")
 OUTPUT_PATH = Path("data/schema_snapshot.json")
-PACKAGE_OUTPUT_PATH = Path("src/pcf_manifest_toolkit/data/schema_snapshot.json")
-PACKAGE_RAW_PATH = Path("src/pcf_manifest_toolkit/data/spec_raw.json")
+PACKAGE_OUTPUT_PATH = Path("src/pcf_toolkit/data/schema_snapshot.json")
+PACKAGE_RAW_PATH = Path("src/pcf_toolkit/data/spec_raw.json")
 
 PARAMETER_TABLES = {"Parameters", "Properties", "Attributes"}
 
@@ -44,16 +44,9 @@ def build_snapshot() -> dict[str, Any]:
             "title": page.get("title"),
             "summary": page.get("summary"),
             "available_for": page.get("available_for"),
-            "parameters": [
-                row
-                for label, rows in tables.items()
-                if label in PARAMETER_TABLES
-                for row in rows
-            ],
-            "child_elements": tables.get("Child Elements", [])
-            + tables.get("Child Element", []),
-            "parent_elements": tables.get("Parent Elements", [])
-            + tables.get("Parent Element", []),
+            "parameters": [row for label, rows in tables.items() if label in PARAMETER_TABLES for row in rows],
+            "child_elements": tables.get("Child Elements", []) + tables.get("Child Element", []),
+            "parent_elements": tables.get("Parent Elements", []) + tables.get("Parent Element", []),
             "value_tables": {
                 key: rows
                 for key, rows in tables.items()
@@ -66,7 +59,7 @@ def build_snapshot() -> dict[str, Any]:
         }
 
     return {
-        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "generated_at": datetime.now(UTC).isoformat(),
         "root_url": payload.get("root_url"),
         "slugs": payload.get("slugs"),
         "elements": elements,
@@ -77,12 +70,8 @@ def main() -> None:
     snapshot = build_snapshot()
     OUTPUT_PATH.write_text(json.dumps(snapshot, indent=2, ensure_ascii=True), encoding="utf-8")
     PACKAGE_OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
-    PACKAGE_OUTPUT_PATH.write_text(
-        json.dumps(snapshot, indent=2, ensure_ascii=True), encoding="utf-8"
-    )
-    PACKAGE_RAW_PATH.write_text(
-        RAW_PATH.read_text(encoding="utf-8"), encoding="utf-8"
-    )
+    PACKAGE_OUTPUT_PATH.write_text(json.dumps(snapshot, indent=2, ensure_ascii=True), encoding="utf-8")
+    PACKAGE_RAW_PATH.write_text(RAW_PATH.read_text(encoding="utf-8"), encoding="utf-8")
     print(f"Wrote {OUTPUT_PATH}")
     print(f"Wrote {PACKAGE_OUTPUT_PATH}")
 

@@ -9,10 +9,7 @@ from urllib.parse import urljoin
 
 from playwright.sync_api import sync_playwright
 
-ROOT_URL = (
-    "https://learn.microsoft.com/en-us/power-apps/developer/component-framework/"
-    "manifest-schema-reference/"
-)
+ROOT_URL = "https://learn.microsoft.com/en-us/power-apps/developer/component-framework/manifest-schema-reference/"
 OUTPUT_PATH = Path("data/spec_raw.json")
 
 
@@ -100,7 +97,10 @@ def _extract_page_data(page) -> dict[str, Any]:
             const rows = bodyRows.length
               ? bodyRows.map((row) => Array.from(row.querySelectorAll('td, th')).map((cell) => cell.textContent.trim()))
               : [];
-            const label = table.getAttribute('aria-label') || table.querySelector('caption')?.textContent?.trim() || null;
+            const label =
+              table.getAttribute('aria-label') ||
+              table.querySelector('caption')?.textContent?.trim() ||
+              null;
             return {
               label,
               heading: findLastHeadingTitle(table),

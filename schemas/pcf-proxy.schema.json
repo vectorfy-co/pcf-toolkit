@@ -1,0 +1,131 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/vectorfy-co/pcf-toolkit/refs/heads/main/schemas/pcf-proxy.schema.json",
+  "title": "PCF Toolkit Proxy Config",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "project_root": {
+      "type": ["string", "null"],
+      "description": "Project root path for global configs."
+    },
+    "crm_url": {
+      "type": ["string", "null"],
+      "format": "uri",
+      "description": "Base CRM URL, e.g. https://yourorg.crm.dynamics.com/"
+    },
+    "expected_path": {
+      "type": "string",
+      "description": "Request path template that matches the PCF webresource base.",
+      "default": "/webresources/{PCF_NAME}/"
+    },
+    "proxy": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "host": {
+          "type": "string",
+          "description": "Host for mitmproxy to listen on.",
+          "default": "127.0.0.1"
+        },
+        "port": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65535,
+          "description": "Port for mitmproxy to listen on.",
+          "default": 8080
+        }
+      }
+    },
+    "http_server": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "host": {
+          "type": "string",
+          "description": "Host for the local file server.",
+          "default": "127.0.0.1"
+        },
+        "port": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65535,
+          "description": "Port for the local file server.",
+          "default": 8082
+        }
+      }
+    },
+    "bundle": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "dist_path": {
+          "type": "string",
+          "description": "Relative path to the built control output.",
+          "default": "out/controls/{PCF_NAME}"
+        }
+      }
+    },
+    "browser": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "prefer": {
+          "type": ["string", "null"],
+          "enum": ["chrome", "edge", "auto", null],
+          "description": "Browser preference.",
+          "default": "chrome"
+        },
+        "path": {
+          "type": ["string", "null"],
+          "description": "Explicit browser executable path."
+        }
+      }
+    },
+    "mitmproxy": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "type": ["string", "null"],
+          "description": "Explicit mitmproxy/mitmdump executable path."
+        }
+      }
+    },
+    "environments": {
+      "type": ["array", "null"],
+      "description": "Known CRM environments for selection.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Environment name from PAC CLI."
+          },
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "Environment URL."
+          },
+          "active": {
+            "type": "boolean",
+            "description": "Active PAC environment.",
+            "default": false
+          }
+        },
+        "required": ["name", "url"]
+      }
+    },
+    "open_browser": {
+      "type": "boolean",
+      "description": "Auto-launch browser with proxy settings.",
+      "default": true
+    },
+    "auto_install": {
+      "type": "boolean",
+      "description": "Auto-install mitmproxy if missing.",
+      "default": true
+    }
+  }
+}

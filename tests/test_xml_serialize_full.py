@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import xml.etree.ElementTree as ET
 
-from pcf_manifest_toolkit.models import (
+from pcf_toolkit.models import (
     Code,
     Control,
     Css,
@@ -22,14 +22,14 @@ from pcf_manifest_toolkit.models import (
     PropertyDependencies,
     PropertyDependency,
     PropertySet,
-    Resx,
     Resources,
+    Resx,
     TypeElement,
     TypeGroup,
     TypesElement,
     UsesFeature,
 )
-from pcf_manifest_toolkit.types import (
+from pcf_toolkit.types import (
     ControlType,
     DependencyLoadType,
     DependencyType,
@@ -39,7 +39,7 @@ from pcf_manifest_toolkit.types import (
     RequiredFor,
     TypeValue,
 )
-from pcf_manifest_toolkit.xml import ManifestXmlSerializer
+from pcf_toolkit.xml import ManifestXmlSerializer
 
 
 def test_full_manifest_serialization() -> None:
@@ -94,9 +94,7 @@ def test_full_manifest_serialization() -> None:
                             of_type=TypeValue.WHOLE_NONE,
                             usage=PropertyUsage.INPUT,
                             required=False,
-                            types=TypesElement(
-                                types=[TypeElement(value=TypeValue.WHOLE_NONE)]
-                            ),
+                            types=TypesElement(types=[TypeElement(value=TypeValue.WHOLE_NONE)]),
                         )
                     ],
                 )
@@ -116,20 +114,14 @@ def test_full_manifest_serialization() -> None:
                     )
                 ]
             ),
-            feature_usage=FeatureUsage(
-                uses_feature=[UsesFeature(name="Device", required=True)]
-            ),
-            external_service_usage=ExternalServiceUsage(
-                enabled=True, domain=[Domain(value="example.com")]
-            ),
+            feature_usage=FeatureUsage(uses_feature=[UsesFeature(name="Device", required=True)]),
+            external_service_usage=ExternalServiceUsage(enabled=True, domain=[Domain(value="example.com")]),
             platform_action=PlatformAction(action_type=PlatformActionType.AFTER_PAGE_LOAD),
             resources=Resources(
                 code=Code(path="index.ts", order=1),
                 css=[Css(path="style.css", order=1)],
                 resx=[Resx(path="strings.resx", version="1.0.0")],
-                platform_library=[
-                    PlatformLibrary(name=PlatformLibraryName.REACT, version="16.14.0")
-                ],
+                platform_library=[PlatformLibrary(name=PlatformLibraryName.REACT, version="16.14.0")],
                 dependency=[
                     Dependency(
                         type=DependencyType.CONTROL,

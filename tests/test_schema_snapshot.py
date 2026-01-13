@@ -7,7 +7,7 @@ import json
 
 import pytest
 
-from pcf_manifest_toolkit import schema_snapshot
+from pcf_toolkit import schema_snapshot
 
 
 def test_load_schema_snapshot_has_elements() -> None:
@@ -20,7 +20,7 @@ def test_read_package_snapshot_with_fake_resource(monkeypatch: pytest.MonkeyPatc
     fake_text = '{"elements": {"manifest": {}}}'
 
     class FakeFiles:
-        def joinpath(self, name: str) -> "FakeFiles":
+        def joinpath(self, name: str) -> FakeFiles:
             return self
 
         def open(self, mode: str = "r", encoding: str | None = None):

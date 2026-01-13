@@ -3,15 +3,14 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
 import xml.etree.ElementTree as ET
+from pathlib import Path
 
 import yaml
 
-from pcf_manifest_toolkit.models import Manifest
-from pcf_manifest_toolkit.xml import ManifestXmlSerializer
-from pcf_manifest_toolkit.xml_import import parse_manifest_xml_text
-
+from pcf_toolkit.models import Manifest
+from pcf_toolkit.xml import ManifestXmlSerializer
+from pcf_toolkit.xml_import import parse_manifest_xml_text
 
 SPEC_PATH = Path("data/spec_raw.json")
 
@@ -25,9 +24,7 @@ def _canonical(element: ET.Element) -> tuple:
 
 def test_import_manifest_roundtrip() -> None:
     spec = json.loads(SPEC_PATH.read_text(encoding="utf-8"))
-    xml_text = next(p for p in spec["pages"] if p["slug"] == "manifest")[
-        "code_blocks"
-    ][0]["code"]
+    xml_text = next(p for p in spec["pages"] if p["slug"] == "manifest")["code_blocks"][0]["code"]
 
     raw = parse_manifest_xml_text(xml_text)
     manifest = Manifest.model_validate(raw)
@@ -38,9 +35,7 @@ def test_import_manifest_roundtrip() -> None:
 
 def test_import_yaml_dump_is_serializable() -> None:
     spec = json.loads(SPEC_PATH.read_text(encoding="utf-8"))
-    xml_text = next(p for p in spec["pages"] if p["slug"] == "manifest")[
-        "code_blocks"
-    ][0]["code"]
+    xml_text = next(p for p in spec["pages"] if p["slug"] == "manifest")["code_blocks"][0]["code"]
 
     raw = parse_manifest_xml_text(xml_text)
     manifest = Manifest.model_validate(raw)

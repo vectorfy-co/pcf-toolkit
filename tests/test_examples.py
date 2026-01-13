@@ -3,12 +3,10 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
 import xml.etree.ElementTree as ET
+from pathlib import Path
 
-import pytest
-
-from pcf_manifest_toolkit.models import (
+from pcf_toolkit.models import (
     Code,
     Control,
     Css,
@@ -26,13 +24,13 @@ from pcf_manifest_toolkit.models import (
     Property,
     PropertyDependencies,
     PropertyDependency,
-    Resx,
     Resources,
+    Resx,
     TypeElement,
     TypeGroup,
     UsesFeature,
 )
-from pcf_manifest_toolkit.types import (
+from pcf_toolkit.types import (
     ControlType,
     DependencyLoadType,
     DependencyType,
@@ -42,8 +40,7 @@ from pcf_manifest_toolkit.types import (
     RequiredFor,
     TypeValue,
 )
-from pcf_manifest_toolkit.xml import ManifestXmlSerializer
-
+from pcf_toolkit.xml import ManifestXmlSerializer
 
 SPEC_PATH = Path("data/spec_raw.json")
 
@@ -119,9 +116,7 @@ def test_code_example_elements() -> None:
     actual = [
         serializer._code_to_element(Code(path="TS_IncrementControl.js", order=1)),
         serializer._css_to_element(Css(path="css/TS_IncrementControl.css", order=1)),
-        serializer._resx_to_element(
-            Resx(path="strings/TSIncrementControl.1033.resx", version="1.0.0")
-        ),
+        serializer._resx_to_element(Resx(path="strings/TSIncrementControl.1033.resx", version="1.0.0")),
     ]
     assert _canonical_list(actual) == _canonical_list(expected)
 
@@ -262,9 +257,7 @@ def test_property_enum_example() -> None:
 
 def test_external_service_usage_example() -> None:
     serializer = ManifestXmlSerializer(xml_declaration=False)
-    usage = ExternalServiceUsage(
-        enabled=True, domain=[Domain(value="www.Microsoft.com")]
-    )
+    usage = ExternalServiceUsage(enabled=True, domain=[Domain(value="www.Microsoft.com")])
     element = serializer._external_service_usage_to_element(usage)
     expected = _load_example("external-service-usage", "Example 1")
     assert _canonical(element) == _canonical(_parse_fragment(expected))

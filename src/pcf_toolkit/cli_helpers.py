@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Iterable
+from collections.abc import Iterable
 
 try:
     from rich.console import Console
@@ -13,7 +13,14 @@ except Exception:  # pragma: no cover - fallback if rich isn't available
 
 
 def rich_console(stderr: bool = False):
-    """Return a Rich console if available, otherwise None."""
+    """Returns a Rich console if available, otherwise None.
+
+    Args:
+      stderr: If True, creates a console that writes to stderr.
+
+    Returns:
+      A Rich Console instance if Rich is available, otherwise None.
+    """
     if Console is None:
         return None
     return Console(stderr=stderr)
@@ -25,7 +32,16 @@ def render_validation_table(
     title: str,
     stderr: bool = True,
 ) -> bool:
-    """Render a validation error table. Returns True if rendered."""
+    """Renders a validation error table using Rich.
+
+    Args:
+      errors: Iterable of validation error dictionaries.
+      title: Title for the error table.
+      stderr: If True, writes to stderr instead of stdout.
+
+    Returns:
+      True if the table was rendered successfully, False otherwise.
+    """
     if Table is None:
         return False
 

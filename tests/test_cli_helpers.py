@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from pcf_manifest_toolkit import cli_helpers
+from pcf_toolkit import cli_helpers
 
 
 def test_render_validation_table() -> None:

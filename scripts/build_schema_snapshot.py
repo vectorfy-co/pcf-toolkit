@@ -66,8 +66,27 @@ def build_snapshot() -> dict[str, Any]:
     }
 
 
+def _strip_generated_at(snapshot: dict[str, Any]) -> dict[str, Any]:
+    data = dict(snapshot)
+    data.pop("generated_at", None)
+    return data
+
+
+def _stable_generated_at(snapshot: dict[str, Any], path: Path) -> dict[str, Any]:
+    if not path.exists():
+        return snapshot
+    try:
+        existing = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return snapshot
+    if _strip_generated_at(existing) == _strip_generated_at(snapshot):
+        snapshot["generated_at"] = existing.get("generated_at", snapshot["generated_at"])
+    return snapshot
+
+
 def main() -> None:
     snapshot = build_snapshot()
+    snapshot = _stable_generated_at(snapshot, OUTPUT_PATH)
     OUTPUT_PATH.write_text(json.dumps(snapshot, indent=2, ensure_ascii=True), encoding="utf-8")
     PACKAGE_OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
     PACKAGE_OUTPUT_PATH.write_text(json.dumps(snapshot, indent=2, ensure_ascii=True), encoding="utf-8")

@@ -37,7 +37,7 @@ jobs:
           UV_PYTHON: python3.13
 
       - name: Create pull request
-        uses: peter-evans/create-pull-request@v7
+        uses: peter-evans/create-pull-request@v8
         with:
           commit-message: "chore(deps): upgrade uv.lock"
           title: "chore(deps): upgrade uv.lock"

@@ -12,7 +12,9 @@ Developer-first toolkit for authoring Power Apps PCF manifests and running a loc
         </a>
         <img src="https://img.shields.io/badge/Python-3.13-3776AB?style=flat&logo=python&logoColor=white" alt="Python 3.13" />
         <img src="https://img.shields.io/github/v/release/vectorfy-co/pcf-toolkit?style=flat&logo=github&logoColor=white" alt="Latest release" />
-        <img src="https://img.shields.io/github/license/vectorfy-co/pcf-toolkit?style=flat&logo=spdx&logoColor=white" alt="License" />
+        <a href="./LICENSE.md">
+          <img src="https://img.shields.io/badge/License-Community%20Use-334155?style=flat&logo=spdx&logoColor=white" alt="License: Community Use" />
+        </a>
       </td>
     </tr>
     <tr>

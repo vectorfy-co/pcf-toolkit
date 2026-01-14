@@ -1,6 +1,6 @@
 [project]
 name = "pcf-toolkit"
-version = "0.2.4"
+version = "0.2.5"
 description = "PCF toolkit CLI for manifest authoring and local proxy development."
 readme = "README.md"
 requires-python = ">=3.13"

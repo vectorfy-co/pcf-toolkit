@@ -2,6 +2,8 @@
 
 Developer-first toolkit for authoring Power Apps PCF manifests and running a local proxy that removes the publish loop.
 
+For detailed guides, API reference, and examples, see [the documentation](https://docs.pcf-toolkit.vectorfy.co).
+
 <div align="left">
   <table>
     <tr>
@@ -31,6 +33,7 @@ Developer-first toolkit for authoring Power Apps PCF manifests and running a loc
     <tr>
       <td><strong>Navigation</strong></td>
       <td>
+        <a href="https://docs.pcf-toolkit.vectorfy.co"><img src="https://img.shields.io/badge/Docs-Full%20Documentation-2563eb?style=flat&logo=readthedocs&logoColor=white" alt="Documentation" /></a>
         <a href="#quick-start"><img src="https://img.shields.io/badge/Local%20Setup-Quick%20Start-059669?style=flat&logo=serverless&logoColor=white" alt="Quick start" /></a>
         <a href="#features"><img src="https://img.shields.io/badge/Overview-Features-7c3aed?style=flat&logo=simpleicons&logoColor=white" alt="Features" /></a>
         <a href="#configuration"><img src="https://img.shields.io/badge/Config-Proxy%20and%20Manifest-0ea5e9?style=flat&logo=zod&logoColor=white" alt="Configuration" /></a>

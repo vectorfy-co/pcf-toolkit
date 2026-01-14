@@ -30,8 +30,9 @@ from __future__ import annotations
 
 import re
 import tomllib
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Final, Iterable, Literal
+from typing import Any, Final, Literal
 
 import typer
 from git import Repo
@@ -137,7 +138,8 @@ def _repo_root(repo: Repo) -> Path:
 def _get_last_tag(repo: Repo) -> str | None:
     """Return the last `v*` tag reachable from HEAD, if any."""
     try:
-        return repo.git.describe("--tags", "--abbrev=0", "--match", "v*").strip()
+        # GitPython's dynamic `repo.git.*` API is typed as `Any`; normalize to `str` for strict mypy.
+        return str(repo.git.describe("--tags", "--abbrev=0", "--match", "v*")).strip()
     except GitCommandError:
         return None
 
@@ -168,10 +170,12 @@ def _load_pyproject(pyproject_path: Path) -> PyProject:
 
 def _strip_project_version(toml_text: str) -> str:
     """Normalize TOML by setting `[project].version` to a sentinel string."""
-    doc = parse(toml_text)
+    # tomlkit has incomplete typing; treat document as `Any` for strict mypy.
+    doc: Any = parse(toml_text)
     if "project" in doc and "version" in doc["project"]:
         doc["project"]["version"] = "__VERSION__"
-    return dumps(doc)
+    # tomlkit returns `Any` (no stubs); normalize to `str` for strict mypy.
+    return str(dumps(doc))
 
 
 def _pyproject_version_only_changed(repo: Repo, since_tag: str | None) -> bool:
@@ -234,14 +238,23 @@ def _choose_bump_level(messages: list[str], default_if_needed: bool) -> BumpLeve
 def _commit_messages(repo: Repo, since_tag: str | None) -> list[str]:
     """Return commit messages since a tag (or all history if none)."""
     rev = f"{since_tag}..HEAD" if since_tag else "HEAD"
-    return [c.message for c in repo.iter_commits(rev)]
+
+    def _as_str(value: str | bytes) -> str:
+        return value.decode("utf-8", errors="replace") if isinstance(value, (bytes, bytearray)) else value
+
+    return [_as_str(c.message) for c in repo.iter_commits(rev)]
 
 def _commit_subjects(repo: Repo, since_tag: str | None, limit: int = 50) -> list[str]:
     """Return commit subjects since a tag (newest first)."""
     rev = f"{since_tag}..HEAD" if since_tag else "HEAD"
     subjects: list[str] = []
+
+    def _as_str(value: str | bytes) -> str:
+        return value.decode("utf-8", errors="replace") if isinstance(value, (bytes, bytearray)) else value
+
     for commit in repo.iter_commits(rev, max_count=limit):
-        subject = commit.message.splitlines()[0].strip()
+        msg = _as_str(commit.message)
+        subject = msg.splitlines()[0].strip()
         if subject:
             subjects.append(subject)
     return subjects
@@ -269,9 +282,10 @@ def _bump_version(version: Version, bump: BumpLevel) -> Version:
 
 def _write_pyproject_version(pyproject_path: Path, next_version: str) -> None:
     """Write `[project].version` using tomlkit (preserving formatting)."""
-    doc = parse(pyproject_path.read_text(encoding="utf-8"))
+    # tomlkit has incomplete typing; treat document as `Any` for strict mypy.
+    doc: Any = parse(pyproject_path.read_text(encoding="utf-8"))
     doc["project"]["version"] = next_version
-    pyproject_path.write_text(dumps(doc), encoding="utf-8")
+    pyproject_path.write_text(str(dumps(doc)), encoding="utf-8")
 
 def _build_tag_message(repo: Repo, since_tag: str | None, tag: str) -> str:
     """Build an annotated tag message including a short changelog."""

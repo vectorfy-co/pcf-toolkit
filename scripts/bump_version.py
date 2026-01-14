@@ -29,7 +29,7 @@ from __future__ import annotations
 
 import tomllib
 from pathlib import Path
-from typing import Final, Literal
+from typing import Any, Final, Literal
 
 import typer
 from packaging.version import Version
@@ -126,9 +126,10 @@ def _write_version(pyproject_path: Path, next_version: str) -> None:
       pyproject_path: Path to `pyproject.toml`.
       next_version: Version to write.
     """
-    doc = parse(pyproject_path.read_text(encoding="utf-8"))
+    # tomlkit has incomplete typing; treat document as `Any` for strict mypy.
+    doc: Any = parse(pyproject_path.read_text(encoding="utf-8"))
     doc["project"]["version"] = next_version
-    pyproject_path.write_text(dumps(doc), encoding="utf-8")
+    pyproject_path.write_text(str(dumps(doc)), encoding="utf-8")
 
 
 def _plan_version(pyproject: PyProject, bump: Bump | None, to_version: str | None) -> VersionPlan:

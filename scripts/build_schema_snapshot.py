@@ -198,9 +198,11 @@ def main() -> None:
     raw = RawSpec.model_validate_json(RAW_PATH.read_text(encoding="utf-8"))
     snapshot = _stable_generated_at(build_snapshot(raw), OUTPUT_PATH)
 
-    OUTPUT_PATH.write_text(snapshot.model_dump_json(indent=2), encoding="utf-8")
+    # Use consistent JSON formatting with explicit newline at EOF
+    json_output = snapshot.model_dump_json(indent=2) + "\n"
+    OUTPUT_PATH.write_text(json_output, encoding="utf-8")
     PACKAGE_OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
-    PACKAGE_OUTPUT_PATH.write_text(snapshot.model_dump_json(indent=2), encoding="utf-8")
+    PACKAGE_OUTPUT_PATH.write_text(json_output, encoding="utf-8")
     PACKAGE_RAW_PATH.write_text(RAW_PATH.read_text(encoding="utf-8"), encoding="utf-8")
 
     CONSOLE.print(f"[green]Wrote[/green] {OUTPUT_PATH}")

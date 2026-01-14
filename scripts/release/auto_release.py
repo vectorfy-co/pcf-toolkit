@@ -139,7 +139,8 @@ def _get_last_tag(repo: Repo) -> str | None:
     """Return the last `v*` tag reachable from HEAD, if any."""
     try:
         # GitPython's dynamic `repo.git.*` API is typed as `Any`; normalize to `str` for strict mypy.
-        return str(repo.git.describe("--tags", "--abbrev=0", "--match", "v*")).strip()
+        result: str = str(repo.git.describe("--tags", "--abbrev=0", "--match", "v*")).strip()
+        return result
     except GitCommandError:
         return None
 
@@ -175,7 +176,8 @@ def _strip_project_version(toml_text: str) -> str:
     if "project" in doc and "version" in doc["project"]:
         doc["project"]["version"] = "__VERSION__"
     # tomlkit returns `Any` (no stubs); normalize to `str` for strict mypy.
-    return str(dumps(doc))
+    result: str = str(dumps(doc))
+    return result
 
 
 def _pyproject_version_only_changed(repo: Repo, since_tag: str | None) -> bool:

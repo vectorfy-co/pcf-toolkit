@@ -4,9 +4,10 @@
 * [Proxy](proxy/overview.md)
 * [GitHub](https://github.com/vectorfy-co/pcf-toolkit)
 
-<div class="version-select">
-  <label for="version-select">Version</label>
-  <select id="version-select">
-    <option value="#/" selected>v0.2.x (current)</option>
-  </select>
+<div class="app-nav-actions">
+  <div class="version-select">
+    <select id="version-select" aria-label="Documentation version">
+      <option value="#/" selected>v0.2.x</option>
+    </select>
+  </div>
 </div>

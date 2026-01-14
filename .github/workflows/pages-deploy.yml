@@ -1,0 +1,51 @@
+name: Deploy Docs (Cloudflare Pages)
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+concurrency:
+  group: docs-pages-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  deployments: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    # Secrets are not available to workflows triggered by PRs from forks.
+    # Skip deploy in that case (pushes + PRs from same repo still deploy).
+    if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
+    env:
+      PROJECT_NAME: pcf-toolkit-docs
+      ASSET_DIR: docs
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Docsify has no build step. If you do have one later, put it here.
+
+      - name: Compute Pages branch name
+        id: branch
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            echo "name=pr-${{ github.event.pull_request.number }}" >> $GITHUB_OUTPUT
+          else
+            echo "name=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Deploy to Cloudflare Pages (Direct Upload)
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: >
+            pages deploy ${{ env.ASSET_DIR }}
+            --project-name=${{ env.PROJECT_NAME }}
+            --branch=${{ steps.branch.outputs.name }}
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}

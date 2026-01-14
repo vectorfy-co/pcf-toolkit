@@ -1,6 +1,7 @@
 - [Home](/)
 
 - Getting Started
+  - [Getting Started](guide/getting-started.md)
   - [Quick Start](guide/quickstart.md)
   - [Installation](guide/installation.md)
   - [First Local Proxy](guide/first-proxy.md)
@@ -50,6 +51,7 @@
 
 - Project
   - [Contributing](project/contributing.md)
+  - [Release Automation](project/releasing.md)
   - [Changelog](project/changelog.md)
   - [Roadmap](project/roadmap.md)
   - [License](project/license.md)

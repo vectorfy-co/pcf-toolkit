@@ -9,7 +9,7 @@ PCF Toolkit lets you author the PCF manifest as **YAML or JSON** and generate `C
 
 ## Why this matters
 
-XML is great for machines but hard for humans. YAML/JSON gives you structure, typing, and better diffs — without changing how Power Apps consumes the manifest.
+XML is great for machines but hard for humans. YAML/JSON gives you structure, typing, and better diffs -- without changing how Power Apps consumes the manifest.
 
 ## Authoring formats
 
@@ -45,18 +45,25 @@ pcf-toolkit validate manifest.yaml
 pcf-toolkit generate manifest.yaml -o ControlManifest.Input.xml
 ```
 
+
+## Schema rules
+
+- Unknown keys are rejected (strict validation).
+- Required fields must be present.
+- Lists such as `type-group.type` and `property.types` must not be empty.
+
 ## Structure at a glance
 
 ```
 control
-├─ properties
-├─ events
-├─ data-set
-├─ type-group
-├─ feature-usage
-├─ external-service-usage
-├─ platform-action
-└─ resources
+- properties
+- events
+- data-set
+- type-group
+- feature-usage
+- external-service-usage
+- platform-action
+- resources
 ```
 
 Start with [Control](manifest/control.md) or jump straight to the [Full Example](manifest/full-example.md).

@@ -1,19 +1,43 @@
-"""Extract PCF manifest schema reference content from Microsoft Learn."""
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.13"
+# dependencies = [
+#   "pydantic>=2.6",
+#   "playwright>=1.40",
+#   "rich>=13.7",
+#   "typer>=0.12",
+# ]
+# ///
+
+"""Extract PCF manifest schema reference content from Microsoft Learn.
+
+This script uses Playwright to scrape the PCF manifest schema reference pages
+from Microsoft Learn into a single JSON file.
+
+Notes:
+  Playwright requires browser binaries. If you haven't installed them yet:
+    uv run --python 3.13 python -m playwright install
+"""
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
-from typing import Any
 from urllib.parse import urljoin
 
-from playwright.sync_api import sync_playwright
+import typer
+from playwright.sync_api import Page, TimeoutError as PlaywrightTimeoutError, sync_playwright
+from pydantic import BaseModel, Field
+from rich.console import Console
+
+APP = typer.Typer(add_completion=False)
+CONSOLE = Console()
 
 ROOT_URL = "https://learn.microsoft.com/en-us/power-apps/developer/component-framework/manifest-schema-reference/"
 OUTPUT_PATH = Path("data/spec_raw.json")
 
 
 def _dedupe(items: list[str]) -> list[str]:
+    """Deduplicate items while preserving order."""
     seen: set[str] = set()
     deduped: list[str] = []
     for item in items:
@@ -24,8 +48,62 @@ def _dedupe(items: list[str]) -> list[str]:
     return deduped
 
 
-def _extract_page_data(page) -> dict[str, Any]:
-    return page.evaluate(
+class ExtractedTable(BaseModel):
+    """A table extracted from a Learn page."""
+
+    label: str | None = Field(default=None, description="Table label/caption (if present).")
+    heading: str | None = Field(default=None, description="Nearest heading title.")
+    headers: list[str] = Field(default_factory=list, description="Column headers.")
+    rows: list[list[str]] = Field(default_factory=list, description="Row cell values.")
+
+
+class ExtractedCodeBlock(BaseModel):
+    """A code snippet extracted from a Learn page."""
+
+    language: str | None = Field(default=None, description="Language identifier (if detected).")
+    code: str = Field(default="", description="Code snippet text.")
+    heading: str | None = Field(default=None, description="Nearest heading title.")
+
+
+class ExtractedPageContent(BaseModel):
+    """Extracted content for a single Learn page (excluding slug/url)."""
+
+    title: str = Field(default="", description="Page H1 title.")
+    summary: str = Field(default="", description="First summary paragraph under H1.")
+    available_for: list[str] = Field(default_factory=list, description="Availability list.")
+    sections: dict[str, list[str]] = Field(default_factory=dict, description="Section text keyed by heading.")
+    tables: list[ExtractedTable] = Field(default_factory=list, description="Tables on the page.")
+    code_blocks: list[ExtractedCodeBlock] = Field(default_factory=list, description="Code blocks on the page.")
+
+
+class ExtractedPage(ExtractedPageContent):
+    """Extracted content for a single Learn page."""
+
+    slug: str = Field(..., description="Relative slug for the page.")
+    url: str = Field(..., description="Absolute URL.")
+
+
+class ExtractionResult(BaseModel):
+    """Root JSON payload written to `data/spec_raw.json`."""
+
+    root_url: str = Field(..., description="Root URL used for extraction.")
+    slugs: list[str] = Field(default_factory=list, description="Sorted list of slugs.")
+    pages: list[ExtractedPage] = Field(default_factory=list, description="Extracted pages.")
+
+
+def _extract_page_data(page: Page) -> ExtractedPageContent:
+    """Extract structured page content from the DOM.
+
+    Args:
+      page: Playwright page.
+
+    Returns:
+      Extracted page content.
+
+    Raises:
+      ValueError: If the page evaluation result can't be validated.
+    """
+    raw = page.evaluate(
         """
         () => {
           const main = document.querySelector('main');
@@ -135,13 +213,22 @@ def _extract_page_data(page) -> dict[str, Any]:
         }
         """
     )
+    return ExtractedPageContent.model_validate(raw)
 
 
-def extract() -> dict[str, Any]:
+def extract(root_url: str) -> ExtractionResult:
+    """Extract the full manifest schema reference into a single JSON payload.
+
+    Args:
+      root_url: Root Learn URL.
+
+    Returns:
+      Extraction result model.
+    """
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch()
         page = browser.new_page()
-        page.goto(ROOT_URL)
+        page.goto(root_url)
         page.wait_for_selector("main")
 
         slugs = page.eval_on_selector_all(
@@ -154,9 +241,9 @@ def extract() -> dict[str, Any]:
         )
         slugs = _dedupe(sorted(slugs))
 
-        pages: list[dict[str, Any]] = []
+        pages: list[ExtractedPage] = []
         for slug in slugs:
-            url = urljoin(ROOT_URL, slug)
+            url = urljoin(root_url, slug)
             page.goto(url)
             page.wait_for_selector("main")
 
@@ -164,36 +251,47 @@ def extract() -> dict[str, Any]:
             for button in page.get_by_role("button", name="Expand table").all():
                 try:
                     button.click(timeout=1000)
-                except Exception:
+                except PlaywrightTimeoutError:
                     continue
 
             # Ensure details blocks are opened.
             for detail in page.query_selector_all("details"):
                 try:
                     page.evaluate("(el) => { el.open = true; }", detail)
-                except Exception:
+                except PlaywrightTimeoutError:
                     continue
 
-            data = _extract_page_data(page)
-            data["slug"] = slug
-            data["url"] = url
-            pages.append(data)
+            content = _extract_page_data(page)
+            pages.append(
+                ExtractedPage(
+                    title=content.title,
+                    summary=content.summary,
+                    available_for=content.available_for,
+                    sections=content.sections,
+                    tables=content.tables,
+                    code_blocks=content.code_blocks,
+                    slug=slug,
+                    url=url,
+                )
+            )
 
         browser.close()
 
-    return {
-        "root_url": ROOT_URL,
-        "slugs": slugs,
-        "pages": pages,
-    }
+    return ExtractionResult(root_url=root_url, slugs=slugs, pages=pages)
 
 
-def main() -> None:
+@APP.command()
+def main(
+    root_url: str = typer.Option(ROOT_URL, help="Root Microsoft Learn URL to scrape."),
+    output: Path = typer.Option(OUTPUT_PATH, help="Output JSON path."),
+) -> None:
+    """Run extraction and write output JSON."""
     OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
-    payload = extract()
-    OUTPUT_PATH.write_text(json.dumps(payload, indent=2, ensure_ascii=True))
-    print(f"Wrote {OUTPUT_PATH}")
+    payload = extract(root_url)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(payload.model_dump_json(indent=2), encoding="utf-8")
+    CONSOLE.print(f"[green]Wrote[/green] {output}")
 
 
 if __name__ == "__main__":
-    main()
+    APP()

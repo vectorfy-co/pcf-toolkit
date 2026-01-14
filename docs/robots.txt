@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://vectorfy.co/pcf-toolkit/sitemap.xml

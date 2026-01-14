@@ -9,44 +9,54 @@ PCF Toolkit gives Power Apps developers a faster, cleaner workflow for PCF manif
 
 <div class="cards">
   <div class="card">
-    <strong>What it is</strong>
-    <p>A Python CLI that turns PCF manifests into code, backed by schema validation and a local proxy workflow.</p>
+    <strong>✨ Manifest as Code</strong>
+    <p>Strong typing and JSON Schema validation keep ControlManifest.Input.xml clean and reviewable.</p>
   </div>
   <div class="card">
-    <strong>Why it matters</strong>
-    <p>Shorter feedback loops, safer diffs, and less time spent wrangling XML or republishing controls.</p>
+    <strong>⚡ Local Proxy Dev</strong>
+    <p>Serve your built control locally while Power Apps runs—no publish loop required.</p>
   </div>
   <div class="card">
-    <strong>How it works</strong>
-    <p>Write YAML/JSON → validate → generate deterministic XML → proxy local builds during runtime.</p>
+    <strong>🔒 Stable XML</strong>
+    <p>Stable XML serialization means clean diffs, safer CI, and easier rollbacks.</p>
   </div>
 </div>
 
 <a href="#/guide/quickstart" class="button primary">Start in 5 minutes</a>
 <a href="#/manifest/overview" class="button secondary">Jump to manifest docs</a>
 
+---
+
 ## The problems it solves
 
-- **Publish-loop fatigue**: The default PCF loop often requires publishing just to see a change. The proxy workflow keeps the runtime pointed at your local build output.
-- **XML friction**: ControlManifest.Input.xml is verbose and error-prone. YAML/JSON is cleaner and easier to review.
-- **Unstable diffs**: Deterministic serialization means your diffs stay stable, so reviews and audits are faster.
-- **Missing validation**: Schema-based validation and strong typing give immediate, actionable feedback.
+- **Publish-loop fatigue** — The default PCF loop often requires publishing just to see a change. The proxy workflow keeps the runtime pointed at your local build output.
+- **XML friction** — ControlManifest.Input.xml is verbose and error-prone. YAML/JSON is cleaner and easier to review.
+- **Unstable diffs** — Deterministic serialization means your diffs stay stable, so reviews and audits are faster.
+- **Missing validation** — Schema-based validation and strong typing give immediate, actionable feedback.
+
+---
 
 ## Value proposition
 
 **PCF Toolkit replaces repetitive manual work with a consistent, automatable pipeline.**
 
-- **Develop faster**: keep Power Apps running and serve fresh builds locally.
-- **Ship safely**: validate manifests against the same schema every time.
-- **Collaborate better**: keep manifests human-readable and diff-friendly.
+- **Develop faster** — keep Power Apps running and serve fresh builds locally.
+- **Ship safely** — validate manifests against the same schema every time.
+- **Collaborate better** — keep manifests human-readable and diff-friendly.
+
+---
 
 ## Use cases
 
-- **Local dev**: iterate on PCF controls without republishing every change.
-- **CI/CD**: validate manifests and generate XML as part of a build.
-- **Legacy upgrades**: import existing XML and keep authoring in YAML/JSON.
+| Scenario | How PCF Toolkit helps |
+| --- | --- |
+| **Local dev** | Iterate on PCF controls without republishing every change |
+| **CI/CD** | Validate manifests and generate XML as part of a build |
+| **Legacy upgrades** | Import existing XML and keep authoring in YAML/JSON |
 
-## Quick start (summary)
+---
+
+## Quick start
 
 ```bash
 uv tool install pcf-toolkit@latest
@@ -55,6 +65,8 @@ pcf-toolkit proxy start MyComponent
 ```
 
 Need more detail? See the full [Quick Start](guide/quickstart.md).
+
+---
 
 ## How it compares
 
@@ -65,11 +77,29 @@ Need more detail? See the full [Quick Start](guide/quickstart.md).
 | Local testing | Proxy local webresources | Publish loop |
 | CI automation | CLI commands | Custom scripts |
 
-## What’s inside
+---
 
-- **Manifest tooling**: validate, generate, import, export schema.
-- **Proxy workflow**: mitmproxy + local HTTP server + PAC CLI integration.
-- **Developer utilities**: examples and doctor checks.
+## Built by Vectorfy Co
+
+PCF Toolkit is developed and maintained by [Vectorfy Co](https://vectorfy.co), an End-to-End AI & Technology Services company delivering enterprise-grade AI systems. We specialize in creating custom AI solutions using PCF controls in Power Apps and Dynamics 365, helping organizations build intelligent, scalable applications that transform business processes.
+
+Whether you're developing AI-powered dashboards, intelligent data visualizations, or custom business logic components, PCF Toolkit provides the foundation for professional-grade Power Apps development.
+
+---
+
+## No telemetry
+
+PCF Toolkit does not emit analytics or telemetry by default. Your data stays on your machine.
+
+---
+
+## What's inside
+
+- **Manifest tooling** — validate, generate, import, export schema.
+- **Proxy workflow** — mitmproxy + local HTTP server + PAC CLI integration.
+- **Developer utilities** — examples and doctor checks.
+
+---
 
 ## Next steps
 
@@ -79,4 +109,4 @@ Need more detail? See the full [Quick Start](guide/quickstart.md).
 
 ---
 
-> Tip: Looking for keyboard navigation? See [Keyboard Shortcuts](meta/keyboard-shortcuts.md).
+> **Tip:** Looking for keyboard navigation? Press `T` to toggle theme, `Cmd/Ctrl + K` to search, or see [Keyboard Shortcuts](meta/keyboard-shortcuts.md) for more.

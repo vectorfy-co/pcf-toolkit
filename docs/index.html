@@ -5,54 +5,85 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>PCF Toolkit Docs</title>
+    
+    <!-- Theme initialization (prevent flash) -->
+    <script>
+      (function () {
+        const stored = localStorage.getItem("pcf-toolkit-theme");
+        const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+        document.documentElement.setAttribute("data-theme", stored || (prefersDark ? "dark" : "light"));
+      })();
+    </script>
+    
+    <!-- SEO Meta -->
     <meta
       name="description"
       content="PCF Toolkit documentation: author Power Apps PCF manifests in YAML/JSON, generate deterministic XML, and run a local proxy to skip the publish loop."
     />
-    <meta name="theme-color" content="#1D4ED8" />
+    <meta name="theme-color" content="#4F46E5" />
+    <meta name="color-scheme" content="light dark" />
 
+    <!-- Open Graph -->
     <meta property="og:type" content="website" />
     <meta property="og:title" content="PCF Toolkit Documentation" />
     <meta
       property="og:description"
       content="Developer-first toolkit for PCF manifests and local proxy development."
     />
-    <meta property="og:image" content="assets/img/vectorfy-logo.png" />
-    <meta property="og:url" content="https://vectorfy.co/pcf-toolkit/" />
+    <meta property="og:image" content="https://vectorfy.co/favico_without_sides.png" />
+    <!-- Set to a placeholder; runtime plugin will update to the current deployment origin -->
+    <meta property="og:url" content="/" />
 
+    <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="PCF Toolkit Documentation" />
     <meta
       name="twitter:description"
       content="Author PCF manifests in YAML/JSON, generate deterministic XML, and proxy webresources locally."
     />
-    <meta name="twitter:image" content="assets/img/vectorfy-logo.png" />
+    <meta name="twitter:image" content="https://vectorfy.co/favico_without_sides.png" />
 
+    <!-- Favicon & Canonical -->
     <link rel="icon" href="assets/img/vectorfy-logo.png" />
-    <link rel="canonical" href="https://vectorfy.co/pcf-toolkit/" />
+    <!-- Set to a placeholder; runtime plugin will update to the current deployment origin -->
+    <link rel="canonical" href="/" />
 
+    <!-- Fonts: Google Sans (display/body) + JetBrains Mono (code) -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&family=JetBrains+Mono:wght@400;500&display=swap"
       rel="stylesheet"
     />
 
+    <!-- Docsify Theme (base) + Custom Theme -->
     <link
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/docsify-themeable@0/dist/css/theme-simple.css"
     />
     <link rel="stylesheet" href="assets/css/theme.css" />
+    
+    <!-- Preload critical assets -->
+    <link rel="preload" href="assets/img/vectorfy-logo.png" as="image" />
   </head>
   <body>
-    <div id="app"></div>
+    <!-- Skip link for accessibility -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+    
+    <!-- App container -->
+    <div id="app">
+      <div class="loading">Loading documentation</div>
+    </div>
 
+    <!-- Custom plugins -->
     <script src="assets/js/docsify-plugins.js"></script>
+    
+    <!-- Docsify configuration -->
     <script>
       window.$docsify = {
         name: "PCF Toolkit",
         nameLink: "#/",
-        repo: "https://github.com/vectorfy-co/pcf-toolkit",
+        repo: false, // Disable default GitHub corner (we use navbar link)
         logo: "assets/img/vectorfy-logo.png",
         loadSidebar: true,
         loadNavbar: true,
@@ -68,15 +99,16 @@
           "/.*/_navbar.md": "/_navbar.md",
         },
         search: {
-          placeholder: "Search docs",
-          noData: "No results",
+          placeholder: "Search docs...",
+          noData: "No results found",
           depth: 3,
           hideOtherSidebarContent: true,
+          pathNamespaces: "/",
         },
         copyCode: {
           buttonText: "Copy",
-          errorText: "Failed",
-          successText: "Copied",
+          errorText: "Error",
+          successText: "Copied!",
         },
         pagination: {
           previousText: "Previous",
@@ -86,20 +118,30 @@
         },
         formatUpdated: "{YYYY}-{MM}-{DD}",
         plugins: [window.docsifyCustomPlugins],
+        themeable: {
+          readyTransition: true,
+          responsiveTables: true,
+        },
       };
     </script>
 
+    <!-- Docsify core -->
     <script src="https://cdn.jsdelivr.net/npm/docsify@4/lib/docsify.min.js"></script>
+    
+    <!-- Docsify plugins -->
     <script src="https://cdn.jsdelivr.net/npm/docsify@4/lib/plugins/search.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/docsify@4/lib/plugins/zoom-image.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/docsify@4/lib/plugins/emoji.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/docsify-pagination/dist/docsify-pagination.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/docsify-copy-code/dist/docsify-copy-code.min.js"></script>
 
+    <!-- Prism syntax highlighting -->
     <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-bash.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-yaml.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-json.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-markup.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-typescript.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-javascript.min.js"></script>
   </body>
 </html>

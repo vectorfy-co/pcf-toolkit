@@ -2,24 +2,20 @@
 
 # PCF Toolkit
 
-**Ship Power Apps PCF controls faster.** Author manifests in YAML/JSON, generate deterministic XML, and proxy local webresources without the publish loop.
+> **Ship Power Apps PCF controls faster.** Author manifests in YAML/JSON, generate deterministic XML, and proxy local webresources without the publish loop.
 
-<a href="#/guide/quickstart" class="button primary">Start in 5 minutes</a>
-<a href="#/guide/architecture" class="button secondary">See the architecture</a>
+<a href="#/guide/quickstart" class="button primary">Documentation</a>
+<a href="#/guide/architecture" class="button secondary">Architecture</a>
 
 <div class="cards">
   <div class="card">
-    <strong>Manifest as code</strong>
+    <strong>✨ Manifest as Code</strong>
     <p>Strong typing and JSON Schema validation keep ControlManifest.Input.xml clean and reviewable.</p>
   </div>
   <div class="card">
-    <strong>Local proxy dev</strong>
-    <p>Serve your built control locally while Power Apps keeps running—no publish loop required.</p>
-  </div>
-  <div class="card">
-    <strong>Deterministic output</strong>
-    <p>Stable XML serialization means clean diffs, safer CI, and easier rollbacks.</p>
+    <strong>⚡ Local Proxy Dev</strong>
+    <p>Serve your built control locally while Power Apps runs—no publish loop required.</p>
   </div>
 </div>
 
-![color](#1d4ed8)
+![color](#4F46E5)

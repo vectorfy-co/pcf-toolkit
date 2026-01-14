@@ -23,6 +23,15 @@ Properties define the inputs/outputs exposed by your control. Each property entr
 | `types` | object | Type list (required for some composite types). |
 | `value` | array | Enum values (only when `of-type: Enum`). |
 
+
+### Enum value fields
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `name` | string | Enum value name. |
+| `display-name-key` | string | Localized label key. |
+| `value` | integer | Numeric value. |
+
 ### Supported `of-type` values
 
 ```
@@ -47,7 +56,8 @@ TwoOptions
 Whole.None
 ```
 
-> Note: some PCF platform types are not supported by the schema (e.g. `Lookup.Customer`, `Status`, `Whole.Duration`). Keep those out of your manifest or handle them externally.
+> Note: some PCF platform types are not supported by the schema: `Lookup.Customer`, `Lookup.Owner`, `Lookup.PartyList`, `Lookup.Regarding`, `Status Reason`, `Status`, `Whole.Duration`, `Whole.Language`, `Whole.TimeZone`.
+> If `types` is provided, it must include at least one `type` entry.
 
 ## Example: bound property
 
@@ -76,6 +86,21 @@ property:
       - name: Active
         display-name-key: STATUS_ACTIVE
         value: 1
+```
+
+
+## Example: multiple types
+
+```yaml
+property:
+  - name: target
+    display-name-key: TARGET_LABEL
+    of-type: Multiple
+    usage: input
+    types:
+      type:
+        - value: SingleLine.Text
+        - value: SingleLine.URL
 ```
 
 ## Example: custom type group

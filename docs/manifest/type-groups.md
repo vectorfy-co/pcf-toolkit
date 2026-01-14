@@ -7,6 +7,8 @@ description: Define reusable type groups to simplify property type definitions.
 
 Type groups let you define a reusable list of types that can be referenced by properties.
 
+> A `type-group` must include at least one `type` entry.
+
 ## type-group fields
 
 | Field | Type | Description |

@@ -1,0 +1,35 @@
+name: Typecheck (scripts)
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  mypy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          version: "latest"
+
+      - name: Install Python 3.13
+        run: uv python install 3.13
+
+      - name: Sync project dependencies (for local imports)
+        run: uv sync --extra dev
+        env:
+          UV_PYTHON: python3.13
+
+      - name: Run mypy (strict) on scripts
+        run: uv run --python 3.13 --with mypy mypy --config-file mypy.ini
+        env:
+          UV_PYTHON: python3.13
+

@@ -28,7 +28,7 @@ Run your normal PCF build so that `out/controls/<Component>` exists.
 pcf-toolkit proxy start MyNamespace.MyComponent
 ```
 
-If you don’t know the name, use auto-detect:
+If you don't know the name, use auto-detect:
 
 ```bash
 pcf-toolkit proxy start auto
@@ -48,8 +48,8 @@ pcf-toolkit proxy stop
 
 ## Common issues
 
-- **Dist path missing**: build output doesn’t exist → update `bundle.dist_path`
+- **Dist path missing**: build output doesn't exist -> update `bundle.dist_path`
 - **Port in use**: change `proxy.port` or `http_server.port`
-- **Browser doesn’t open**: ensure `crm_url` is set and `browser.prefer` is valid
+- **Browser doesn't open**: ensure `crm_url` is set and `browser.prefer` is valid
 
 Next: [Proxy configuration reference](proxy/configuration.md)

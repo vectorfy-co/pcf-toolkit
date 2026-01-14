@@ -7,6 +7,23 @@ on:
       - "v*"
   pull_request:
     branches: ["main"]
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "If true, computes the next version but does not commit/tag/publish."
+        required: false
+        default: true
+        type: boolean
+      force:
+        description: "Force a release even if only docs/meta files changed."
+        required: false
+        default: false
+        type: boolean
+      bump:
+        description: "Override bump level (otherwise derived from Conventional Commits, defaulting to patch)."
+        required: false
+        type: string
+        default: ""
 
 permissions:
   contents: read
@@ -36,14 +53,115 @@ jobs:
 
       - name: Build schema snapshot
         run: |
-          uv run --python 3.13 python scripts/build_schema_snapshot.py
-          uv run --python 3.13 python scripts/build_json_schema.py
+          uv run --python 3.13 --script scripts/build_schema_snapshot.py
+          uv run --python 3.13 --script scripts/build_json_schema.py
 
       - name: Ensure schema outputs are committed
         run: git diff --exit-code
 
       - name: Run Pytest
         run: uv run --python 3.13 pytest -q --cov=pcf_toolkit --cov-report=term-missing
+
+  auto_release:
+    needs: test
+    runs-on: ubuntu-latest
+    # Run on pushes to main (not tags), and allow manual runs for debugging.
+    if: |
+      (github.event_name == 'push' && github.ref == 'refs/heads/main' && !startsWith(github.event.head_commit.message, 'chore(release):')) ||
+      github.event_name == 'workflow_dispatch'
+    environment: pypi
+    concurrency:
+      group: auto-release-main
+      cancel-in-progress: false
+    permissions:
+      contents: write
+      id-token: write
+
+    steps:
+      - name: Check out source (full history for tags)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          version: "latest"
+
+      - name: Install Python 3.13
+        run: uv python install 3.13
+
+      - name: Configure git user
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Plan release (dry-run)
+        id: plan
+        run: |
+          set -euo pipefail
+
+          ARGS=(--dry-run)
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            if [[ "${{ inputs.force }}" == "true" ]]; then
+              ARGS+=(--force)
+            fi
+            if [[ -n "${{ inputs.bump }}" ]]; then
+              ARGS+=(--bump "${{ inputs.bump }}")
+            fi
+          fi
+
+          uv run --python 3.13 --script scripts/release/auto_release.py --github-output "$GITHUB_OUTPUT" "${ARGS[@]}"
+        env:
+          UV_PYTHON: python3.13
+
+      - name: Apply version bump + tag
+        id: apply
+        if: |
+          steps.plan.outputs.do_release == 'true' &&
+          (github.event_name != 'workflow_dispatch' || inputs.dry_run != 'true')
+        run: |
+          set -euo pipefail
+
+          ARGS=()
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            if [[ "${{ inputs.force }}" == "true" ]]; then
+              ARGS+=(--force)
+            fi
+            if [[ -n "${{ inputs.bump }}" ]]; then
+              ARGS+=(--bump "${{ inputs.bump }}")
+            fi
+          fi
+
+          uv run --python 3.13 --script scripts/release/auto_release.py --github-output "$GITHUB_OUTPUT" "${ARGS[@]}"
+        env:
+          UV_PYTHON: python3.13
+
+      - name: Push commit + tag
+        if: steps.apply.outputs.tag != ''
+        run: |
+          set -euo pipefail
+          git push origin HEAD:main --follow-tags
+
+      - name: Build package
+        if: steps.apply.outputs.tag != ''
+        run: uv build
+        env:
+          UV_PYTHON: python3.13
+
+      - name: Publish package distributions to PyPI
+        if: steps.apply.outputs.tag != ''
+        run: uv publish
+        env:
+          UV_PYTHON: python3.13
+
+      - name: Create GitHub Release
+        if: steps.apply.outputs.tag != ''
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.apply.outputs.tag }}
+          generate_release_notes: true
+          make_latest: true
 
   publish:
     needs: test

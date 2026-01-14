@@ -7,13 +7,13 @@ description: Understand the PCF Toolkit architecture, data flow, and core compon
 
 PCF Toolkit is composed of two main subsystems:
 
-1. **Manifest tooling**: YAML/JSON → validation → deterministic XML output.
+1. **Manifest tooling**: YAML/JSON -> validation -> deterministic XML output.
 2. **Proxy workflow**: local webresource proxy using mitmproxy + a local HTTP server.
 
 ## Manifest tooling flow
 
 ```text
-YAML/JSON → Pydantic validation → deterministic XML serializer → ControlManifest.Input.xml
+YAML/JSON -> Pydantic validation -> deterministic XML serializer -> ControlManifest.Input.xml
 ```
 
 - **Pydantic models** enforce the PCF schema.
@@ -23,7 +23,7 @@ YAML/JSON → Pydantic validation → deterministic XML serializer → ControlMa
 ## Proxy flow
 
 ```text
-Power Apps request → mitmproxy intercept → rewrite webresource → local HTTP server → built files
+Power Apps request -> mitmproxy intercept -> rewrite webresource -> local HTTP server -> built files
 ```
 
 Key components:
@@ -33,6 +33,21 @@ Key components:
 - `pcf_toolkit.proxy.addons.redirect_bundle`: rewrites webresource paths
 - `pcf_toolkit.proxy.doctor`: validates prerequisites (ports, certs, dist paths)
 
+
+## Schema pipeline
+
+Schema artifacts are generated from raw spec data and exported as JSON Schema:
+
+```text
+raw spec -> schema snapshot -> JSON Schema -> editor validation
+```
+
+Scripts:
+
+- `scripts/extract_spec.py` (optional)
+- `scripts/build_schema_snapshot.py`
+- `scripts/build_json_schema.py`
+
 ## Where configuration lives
 
 - **Manifest**: YAML/JSON file you author.
@@ -41,6 +56,6 @@ Key components:
 
 ## Why deterministic XML matters
 
-Think of XML as the “assembly output” of your manifest. When the output is deterministic, every build is predictable, making diffs, reviews, and CI gates reliable.
+Think of XML as the "assembly output" of your manifest. When the output is deterministic, every build is predictable, making diffs, reviews, and CI gates reliable.
 
 Next: [Manifest Authoring](manifest/overview.md)

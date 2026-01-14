@@ -208,8 +208,8 @@ uv run --python 3.13 pytest
 
 Regenerate schema artifacts:
 ```bash
-uv run --python 3.13 python scripts/build_schema_snapshot.py
-uv run --python 3.13 python scripts/build_json_schema.py
+uv run --python 3.13 --script scripts/build_schema_snapshot.py
+uv run --python 3.13 --script scripts/build_json_schema.py
 ```
 
 If you run `scripts/extract_spec.py`, install browser binaries first:

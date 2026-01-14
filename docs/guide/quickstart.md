@@ -30,8 +30,11 @@ Make sure your build outputs to `out/controls/<Component>` (default). If your bu
 ## 4) Start the proxy
 
 ```bash
-pcf-toolkit proxy start MyComponent
+pcf-toolkit proxy start MyNamespace.MyComponent
 ```
+
+Component names follow the `namespace.constructor` format. If you are unsure, use auto-detect.
+
 
 If the component name is unknown, you can use auto-detection:
 

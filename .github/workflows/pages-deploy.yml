@@ -48,4 +48,5 @@ jobs:
             pages deploy ${{ env.ASSET_DIR }}
             --project-name=${{ env.PROJECT_NAME }}
             --branch=${{ steps.branch.outputs.name }}
+            --commit-dirty=true
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}

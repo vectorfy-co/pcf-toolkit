@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PCF Toolkit Docs</title>
+    <meta
+      name="description"
+      content="PCF Toolkit documentation: author Power Apps PCF manifests in YAML/JSON, generate deterministic XML, and run a local proxy to skip the publish loop."
+    />
+    <meta name="theme-color" content="#1D4ED8" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="PCF Toolkit Documentation" />
+    <meta
+      property="og:description"
+      content="Developer-first toolkit for PCF manifests and local proxy development."
+    />
+    <meta property="og:image" content="assets/img/vectorfy-logo.png" />
+    <meta property="og:url" content="https://vectorfy.co/pcf-toolkit/" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="PCF Toolkit Documentation" />
+    <meta
+      name="twitter:description"
+      content="Author PCF manifests in YAML/JSON, generate deterministic XML, and proxy webresources locally."
+    />
+    <meta name="twitter:image" content="assets/img/vectorfy-logo.png" />
+
+    <link rel="icon" href="assets/img/vectorfy-logo.png" />
+    <link rel="canonical" href="https://vectorfy.co/pcf-toolkit/" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/docsify-themeable@0/dist/css/theme-simple.css"
+    />
+    <link rel="stylesheet" href="assets/css/theme.css" />
+  </head>
+  <body>
+    <div id="app"></div>
+
+    <script src="assets/js/docsify-plugins.js"></script>
+    <script>
+      window.$docsify = {
+        name: "PCF Toolkit",
+        nameLink: "#/",
+        repo: "https://github.com/vectorfy-co/pcf-toolkit",
+        logo: "assets/img/vectorfy-logo.png",
+        loadSidebar: true,
+        loadNavbar: true,
+        coverpage: true,
+        onlyCover: false,
+        auto2top: true,
+        maxLevel: 3,
+        subMaxLevel: 3,
+        externalLinkTarget: "_blank",
+        routerMode: "hash",
+        alias: {
+          "/.*/_sidebar.md": "/_sidebar.md",
+          "/.*/_navbar.md": "/_navbar.md",
+        },
+        search: {
+          placeholder: "Search docs",
+          noData: "No results",
+          depth: 3,
+          hideOtherSidebarContent: true,
+        },
+        copyCode: {
+          buttonText: "Copy",
+          errorText: "Failed",
+          successText: "Copied",
+        },
+        pagination: {
+          previousText: "Previous",
+          nextText: "Next",
+          crossChapter: true,
+          crossChapterText: true,
+        },
+        formatUpdated: "{YYYY}-{MM}-{DD}",
+        plugins: [window.docsifyCustomPlugins],
+      };
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/docsify@4/lib/docsify.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/docsify@4/lib/plugins/search.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/docsify@4/lib/plugins/zoom-image.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/docsify@4/lib/plugins/emoji.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/docsify-pagination/dist/docsify-pagination.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/docsify-copy-code/dist/docsify-copy-code.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-bash.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-yaml.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-json.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-markup.min.js"></script>
+  </body>
+</html>

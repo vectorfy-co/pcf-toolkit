@@ -50,7 +50,7 @@ proxy = [
 pcf-toolkit = "pcf_toolkit.cli:app"
 
 [project.urls]
-homepage = "https://github.com/vectorfy-co/pcf-toolkit"
+homepage = "https://docs.pcf-toolkit.vectorfy.co"
 repository = "https://github.com/vectorfy-co/pcf-toolkit"
 issues = "https://github.com/vectorfy-co/pcf-toolkit/issues"
 

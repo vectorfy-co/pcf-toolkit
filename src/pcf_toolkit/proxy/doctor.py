@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import os
+import shutil
 import socket
+import subprocess
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -97,6 +99,11 @@ def run_doctor(
     return results
 
 
+def check_mitmproxy_certificate() -> CheckResult:
+    """Returns a single check result for mitmproxy certificate trust."""
+    return _check_certificates()[0]
+
+
 def _check_ports(config: ProxyConfig) -> list[CheckResult]:
     """Checks if proxy and HTTP server ports are available.
 
@@ -168,11 +175,30 @@ def _check_certificates() -> list[CheckResult]:
     cert_dir = Path.home() / ".mitmproxy"
     cert_file = cert_dir / "mitmproxy-ca-cert.pem"
     if cert_file.exists():
+        trusted = _is_cert_trusted(cert_file)
+        if trusted is True:
+            return [
+                CheckResult(
+                    name="mitmproxy_cert",
+                    status="ok",
+                    message="mitmproxy CA cert is trusted.",
+                )
+            ]
+        if trusted is False:
+            return [
+                CheckResult(
+                    name="mitmproxy_cert",
+                    status="warn",
+                    message="mitmproxy CA cert exists but is not trusted.",
+                    fix=_cert_fix_instructions(cert_dir),
+                )
+            ]
         return [
             CheckResult(
                 name="mitmproxy_cert",
-                status="ok",
-                message=f"mitmproxy CA cert found at {cert_file}",
+                status="warn",
+                message="mitmproxy CA cert found but trust status is unknown.",
+                fix=_cert_fix_instructions(cert_dir),
             )
         ]
     return [
@@ -275,5 +301,68 @@ def _cert_fix_instructions(cert_dir: Path) -> str:
     if os.name == "nt":
         return f"Run: certutil -addstore -f Root {cert_path} (elevated)"
     if sys.platform == "darwin":
-        return f"Run: sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain {cert_path}"
-    return f"Run: sudo cp {cert_path} /usr/local/share/ca-certificates/ && sudo update-ca-certificates"
+        return (
+            "Run: sudo security add-trusted-cert -d -r trustRoot "
+            f"-k /Library/Keychains/System.keychain {cert_path}"
+        )
+    if shutil.which("update-ca-certificates"):
+        return (
+            f"Run: sudo cp {cert_path} /usr/local/share/ca-certificates/mitmproxy-ca-cert.crt "
+            "&& sudo update-ca-certificates"
+        )
+    if shutil.which("update-ca-trust"):
+        return (
+            f"Run: sudo cp {cert_path} /etc/pki/ca-trust/source/anchors/mitmproxy-ca-cert.pem "
+            "&& sudo update-ca-trust extract"
+        )
+    return f"Trust the cert manually: {cert_path}"
+
+
+def _is_cert_trusted(cert_path: Path) -> bool | None:
+    """Best-effort check for whether the mitmproxy CA is trusted."""
+    if sys.platform == "darwin":
+        return _is_cert_trusted_macos(cert_path)
+    if sys.platform.startswith("linux"):
+        return _is_cert_trusted_linux(cert_path)
+    if os.name == "nt":
+        return _is_cert_trusted_windows(cert_path)
+    return None
+
+
+def _is_cert_trusted_macos(cert_path: Path) -> bool | None:
+    try:
+        result = subprocess.run(
+            [
+                "security",
+                "find-certificate",
+                "-c",
+                "mitmproxy",
+                "-a",
+                "/Library/Keychains/System.keychain",
+            ],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+    except FileNotFoundError:
+        return None
+    if result.returncode != 0:
+        return False
+    return bool(result.stdout.strip())
+
+
+def _is_cert_trusted_linux(cert_path: Path) -> bool:
+    candidates = [
+        Path("/usr/local/share/ca-certificates/mitmproxy-ca-cert.crt"),
+        Path("/etc/ssl/certs/mitmproxy-ca-cert.pem"),
+        Path("/etc/ssl/certs/mitmproxy-ca-cert.crt"),
+        Path("/etc/pki/ca-trust/source/anchors/mitmproxy-ca-cert.pem"),
+        Path("/etc/pki/ca-trust/source/anchors/mitmproxy-ca-cert.crt"),
+    ]
+    return any(path.exists() for path in candidates)
+
+
+def _is_cert_trusted_windows(cert_path: Path) -> bool | None:
+    # Implementing a reliable trust-store check on Windows is non-trivial here.
+    # Fall back to unknown and let the CLI provide instructions.
+    return None

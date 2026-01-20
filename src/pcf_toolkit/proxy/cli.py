@@ -43,7 +43,7 @@ from pcf_toolkit.proxy.config import (
     render_dist_path,
     write_default_config,
 )
-from pcf_toolkit.proxy.doctor import CheckResult, run_doctor
+from pcf_toolkit.proxy.doctor import CheckResult, check_mitmproxy_certificate, run_doctor
 from pcf_toolkit.proxy.mitm import ensure_mitmproxy, find_mitmproxy, spawn_mitmproxy
 from pcf_toolkit.proxy.server import spawn_http_server
 from pcf_toolkit.rich_help import RichTyperCommand, RichTyperGroup
@@ -365,6 +365,9 @@ def start(
             creationflags=creationflags,
         )
 
+    if not detach:
+        _maybe_prompt_for_cert_trust()
+
     if log_handle is not None:
         log_handle.close()
 
@@ -546,7 +549,82 @@ def _apply_fixes(results: list[CheckResult], config: ProxyConfig) -> None:
             except Exception as exc:  # noqa: BLE001
                 typer.secho(f"Failed to install mitmproxy: {exc}", fg=typer.colors.RED)
         if result.name == "mitmproxy_cert" and result.status == "warn":
+            if _is_interactive() and _supports_cert_install():
+                if typer.confirm(
+                    "Install mitmproxy CA into the system trust store? This requires sudo.",
+                    default=False,
+                ):
+                    _install_mitmproxy_cert()
+                    continue
             typer.secho(result.fix or "", fg=typer.colors.YELLOW)
+
+
+def _supports_cert_install() -> bool:
+    return sys.platform == "darwin" or sys.platform.startswith("linux")
+
+
+def _maybe_prompt_for_cert_trust() -> None:
+    cert_result = check_mitmproxy_certificate()
+    if cert_result.status == "ok":
+        return
+
+    typer.secho(f"[{cert_result.status.upper()}] {cert_result.name}: {cert_result.message}", fg=typer.colors.YELLOW)
+    if _is_interactive() and _supports_cert_install():
+        if typer.confirm(
+            "Install mitmproxy CA into the system trust store? This requires sudo.",
+            default=False,
+        ):
+            _install_mitmproxy_cert()
+            return
+    if cert_result.fix:
+        typer.secho(cert_result.fix, fg=typer.colors.YELLOW)
+
+
+def _install_mitmproxy_cert() -> None:
+    cert_path = Path.home() / ".mitmproxy" / "mitmproxy-ca-cert.pem"
+    if not cert_path.exists():
+        typer.secho("mitmproxy CA cert not found. Run the proxy once to generate it.", fg=typer.colors.RED)
+        return
+
+    if sys.platform == "darwin":
+        _run_privileged(
+            [
+                "sudo",
+                "security",
+                "add-trusted-cert",
+                "-d",
+                "-r",
+                "trustRoot",
+                "-k",
+                "/Library/Keychains/System.keychain",
+                str(cert_path),
+            ],
+            "Trusting mitmproxy CA in System Keychain...",
+        )
+        return
+
+    if sys.platform.startswith("linux"):
+        if shutil.which("update-ca-certificates"):
+            target = Path("/usr/local/share/ca-certificates/mitmproxy-ca-cert.crt")
+            _run_privileged(["sudo", "cp", str(cert_path), str(target)], "Copying cert into CA store...")
+            _run_privileged(["sudo", "update-ca-certificates"], "Updating CA certificates...")
+            return
+        if shutil.which("update-ca-trust"):
+            target = Path("/etc/pki/ca-trust/source/anchors/mitmproxy-ca-cert.pem")
+            _run_privileged(["sudo", "cp", str(cert_path), str(target)], "Copying cert into CA trust anchors...")
+            _run_privileged(["sudo", "update-ca-trust", "extract"], "Updating CA trust...")
+            return
+
+    typer.secho("Automatic install not supported on this platform.", fg=typer.colors.YELLOW)
+
+
+def _run_privileged(command: list[str], message: str) -> None:
+    typer.secho(message, fg=typer.colors.CYAN)
+    try:
+        subprocess.run(command, check=True)
+        typer.secho("Done.", fg=typer.colors.GREEN)
+    except subprocess.CalledProcessError as exc:
+        typer.secho(f"Command failed: {exc}", fg=typer.colors.RED)
 
 
 def _print_results(results: list[CheckResult]) -> None:

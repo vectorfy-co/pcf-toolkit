@@ -3,8 +3,9 @@ name: Deploy Docs (Cloudflare Pages)
 on:
   push:
     branches: [main]
-  pull_request:
-    types: [opened, synchronize, reopened]
+    paths:
+      - "docs/**"
+  workflow_dispatch:
 
 concurrency:
   group: docs-pages-${{ github.workflow }}-${{ github.ref }}
@@ -17,9 +18,6 @@ permissions:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    # Secrets are not available to workflows triggered by PRs from forks.
-    # Skip deploy in that case (pushes + PRs from same repo still deploy).
-    if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
     env:
       PROJECT_NAME: pcf-toolkit-docs
       ASSET_DIR: docs

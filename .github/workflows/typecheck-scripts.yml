@@ -24,7 +24,7 @@ jobs:
         run: uv python install 3.13
 
       - name: Sync project dependencies (for local imports)
-        run: uv sync --extra dev
+        run: uv sync --locked --extra dev
         env:
           UV_PYTHON: python3.13
 
@@ -32,4 +32,3 @@ jobs:
         run: uv run --python 3.13 --with mypy mypy --config-file mypy.ini
         env:
           UV_PYTHON: python3.13
-

@@ -1,3 +1,6 @@
+> [!IMPORTANT]
+> This project is discontinued and no longer maintained.
+
 # ![PCF Toolkit](https://img.shields.io/badge/PCF%20Toolkit-Local%20PCF%20dev-1D4ED8?style=for-the-badge&logo=python&logoColor=white)
 
 Developer-first toolkit for authoring Power Apps PCF manifests and running a local proxy that removes the publish loop.
